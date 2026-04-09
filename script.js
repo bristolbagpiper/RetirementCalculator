@@ -14,6 +14,11 @@ const savingsTemplate = document.getElementById("savingsAccountTemplate");
 const addSavingsAccountButton = document.getElementById("addSavingsAccount");
 const withdrawalRateInput = document.getElementById("withdrawalRate");
 const withdrawalPresetButtons = Array.from(document.querySelectorAll(".rate-preset"));
+const chartModeButtons = Array.from(document.querySelectorAll("[data-chart-mode]"));
+const interactiveChart = document.getElementById("interactiveChart");
+const chartTooltip = document.getElementById("chartTooltip");
+const chartStage = document.getElementById("chartStage");
+const chartLegend = document.getElementById("chartLegend");
 const optionalSections = [
   { toggleId: "includePension", containerId: "pensionSection" },
   { toggleId: "includeIsa", containerId: "isaSection" },
@@ -92,6 +97,13 @@ const outputIds = {
   assumptionInflation: "assumption-inflation",
   assumptionEquity: "assumption-equity",
   equityUsageLabel: "equity-usage-label",
+  chartTitle: "chartTitle",
+  chartSummary: "chartSummary",
+  chartDescription: "chartDescription",
+};
+
+const chartState = {
+  mode: "growth",
 };
 
 function readNumber(id) {
@@ -175,6 +187,20 @@ function formatPercent(value) {
   return `${Math.round(value)}%`;
 }
 
+function formatCurrencyShort(value) {
+  const absolute = Math.abs(value);
+
+  if (absolute >= 1000000) {
+    return `£${(value / 1000000).toFixed(1)}m`;
+  }
+
+  if (absolute >= 1000) {
+    return `£${Math.round(value / 1000)}k`;
+  }
+
+  return formatCurrency(value);
+}
+
 function updateWithdrawalGuidance(withdrawalRate) {
   let message = "A common planning starting point is around 4%. Lower numbers are more cautious.";
 
@@ -249,6 +275,34 @@ function calculateSavingsFutureValue(yearsToRetirement) {
 
     return total + futureValueWithMonthlyContributions(balance, monthly, rate, yearsToRetirement);
   }, 0);
+}
+
+function getSavingsMonthlyContribution() {
+  return getSavingsRows().reduce((total, row) => {
+    const monthly = Number(row.querySelector(".savings-monthly")?.value) || 0;
+    return total + monthly;
+  }, 0);
+}
+
+function getSavingsAverageRate() {
+  const rows = getSavingsRows();
+  if (!rows.length) {
+    return 0;
+  }
+
+  let weightedRateTotal = 0;
+  let weightTotal = 0;
+
+  rows.forEach((row) => {
+    const balance = Number(row.querySelector(".savings-balance")?.value) || 0;
+    const monthly = Number(row.querySelector(".savings-monthly")?.value) || 0;
+    const rate = Number(row.querySelector(".savings-rate")?.value) || 0;
+    const weight = Math.max(1, balance + monthly * 12);
+    weightedRateTotal += rate * weight;
+    weightTotal += weight;
+  });
+
+  return weightTotal > 0 ? weightedRateTotal / weightTotal : 0;
 }
 
 function isChecked(id) {
@@ -352,6 +406,274 @@ function findAdditionalYearsNeeded(inputs, baseYearsToRetirement) {
   }
 
   return null;
+}
+
+function buildGrowthChartData(inputs, currentAge, yearsToRetirement) {
+  const series = [];
+
+  for (let year = 0; year <= yearsToRetirement; year += 1) {
+    const projection = calculateProjection(inputs, year);
+    series.push({
+      label: `Age ${currentAge + year}`,
+      values: [
+        { key: "Pension", value: projection.pensionFuture, color: "#3e82f7" },
+        { key: "S&S ISA", value: projection.isaFuture, color: "#f0a13a" },
+        { key: "Other accounts", value: projection.savingsFuture, color: "#7f8cf6" },
+        { key: "Home equity", value: projection.homeEquityFuture, color: "#2fa67f" },
+      ],
+      total: projection.projectedNetWorth,
+    });
+  }
+
+  return {
+    title: "Net worth growth to retirement",
+    summary: "Stacked bars show how each part of your net worth builds up between now and retirement.",
+    description: "Hover the bars to inspect how your plan grows between now and retirement.",
+    legend: [
+      { label: "Pension", color: "#3e82f7" },
+      { label: "S&S ISA", color: "#f0a13a" },
+      { label: "Other accounts", color: "#7f8cf6" },
+      { label: "Home equity", color: "#2fa67f" },
+    ],
+    data: series,
+    tooltip(point) {
+      const lines = point.values.map((item) => `${item.key}: ${formatCurrency(item.value)}`);
+      return {
+        title: point.label,
+        lines: [...lines, `Total net worth: ${formatCurrency(point.total)}`],
+      };
+    },
+  };
+}
+
+function buildContributionChartData(inputs, currentAge, yearsToRetirement) {
+  const pensionYearly = inputs.pensionMonthlyTotal * 12;
+  const isaYearly = inputs.isaMonthly * 12;
+  const savingsYearly = inputs.includeOtherAccounts ? getSavingsMonthlyContribution() * 12 : 0;
+  const series = [];
+
+  for (let year = 0; year <= yearsToRetirement; year += 1) {
+    const pensionContrib = pensionYearly * year;
+    const isaContrib = isaYearly * year;
+    const savingsContrib = savingsYearly * year;
+    const total = pensionContrib + isaContrib + savingsContrib;
+
+    series.push({
+      label: `Age ${currentAge + year}`,
+      values: [
+        { key: "Pension contributions", value: pensionContrib, color: "#3e82f7" },
+        { key: "ISA contributions", value: isaContrib, color: "#f0a13a" },
+        { key: "Other account contributions", value: savingsContrib, color: "#7f8cf6" },
+      ],
+      total,
+    });
+  }
+
+  return {
+    title: "Cumulative contributions before retirement",
+    summary: "These bars focus on how much new money you add over time, separate from investment growth.",
+    description: "Hover the bars to see how much you have contributed by each age.",
+    legend: [
+      { label: "Pension contributions", color: "#3e82f7" },
+      { label: "ISA contributions", color: "#f0a13a" },
+      { label: "Other accounts", color: "#7f8cf6" },
+    ],
+    data: series,
+    tooltip(point) {
+      const lines = point.values.map((item) => `${item.key}: ${formatCurrency(item.value)}`);
+      return {
+        title: point.label,
+        lines: [...lines, `Total contributions: ${formatCurrency(point.total)}`],
+      };
+    },
+  };
+}
+
+function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement) {
+  const maxYears = 25;
+  const savingsRate = inputs.includeOtherAccounts ? getSavingsAverageRate() : 0;
+  const withdrawalBase =
+    (retirementProjection.pensionFuture +
+      retirementProjection.isaFuture +
+      retirementProjection.savingsFuture +
+      retirementProjection.usableHomeEquity) *
+    (inputs.withdrawalRate / 100);
+
+  let pensionBalance = retirementProjection.pensionFuture;
+  let isaBalance = retirementProjection.isaFuture;
+  let savingsBalance = retirementProjection.savingsFuture;
+  let homeCashBalance = retirementProjection.usableHomeEquity;
+  const series = [];
+
+  for (let year = 0; year <= maxYears; year += 1) {
+    const age = inputs.retirementAge + year;
+    const openingBalance = pensionBalance + isaBalance + savingsBalance + homeCashBalance;
+    const withdrawal = withdrawalBase * Math.pow(1 + inputs.inflationRate / 100, year);
+
+    series.push({
+      label: `Age ${age}`,
+      values: [{ key: "Projected remaining pot", value: openingBalance, color: "#2768c9" }],
+      total: openingBalance,
+      withdrawal,
+    });
+
+    if (openingBalance <= 0) {
+      continue;
+    }
+
+    const plannedWithdrawal = Math.min(openingBalance, withdrawal);
+    const totalBeforeWithdrawal = Math.max(openingBalance, 1);
+
+    pensionBalance -= plannedWithdrawal * (pensionBalance / totalBeforeWithdrawal);
+    isaBalance -= plannedWithdrawal * (isaBalance / totalBeforeWithdrawal);
+    savingsBalance -= plannedWithdrawal * (savingsBalance / totalBeforeWithdrawal);
+    homeCashBalance -= plannedWithdrawal * (homeCashBalance / totalBeforeWithdrawal);
+
+    pensionBalance = Math.max(0, pensionBalance * (1 + inputs.pensionReturn / 100));
+    isaBalance = Math.max(0, isaBalance * (1 + inputs.isaReturn / 100));
+    savingsBalance = Math.max(0, savingsBalance * (1 + savingsRate / 100));
+    homeCashBalance = Math.max(0, homeCashBalance);
+  }
+
+  return {
+    title: "Drawdown projection after retirement",
+    summary: "This estimates how your accessible retirement pot changes over the first 25 years after retirement if withdrawals rise with inflation.",
+    description: "Hover the bars to compare the remaining pot and the planned withdrawal each year.",
+    legend: [{ label: "Projected remaining pot", color: "#2768c9" }],
+    data: series,
+    tooltip(point) {
+      return {
+        title: point.label,
+        lines: [
+          `Remaining pot: ${formatCurrency(point.total)}`,
+          `Planned withdrawal that year: ${formatCurrency(point.withdrawal)}`,
+        ],
+      };
+    },
+  };
+}
+
+function buildChartModel(inputs, currentAge, yearsToRetirement, retirementProjection) {
+  if (chartState.mode === "contributions") {
+    return buildContributionChartData(inputs, currentAge, yearsToRetirement);
+  }
+
+  if (chartState.mode === "drawdown") {
+    return buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement);
+  }
+
+  return buildGrowthChartData(inputs, currentAge, yearsToRetirement);
+}
+
+function renderChartLegend(legend) {
+  chartLegend.innerHTML = legend
+    .map(
+      (item) =>
+        `<span class="legend-item"><span class="legend-swatch" style="background:${item.color}"></span>${item.label}</span>`
+    )
+    .join("");
+}
+
+function showChartTooltip(event, payload) {
+  const stageRect = chartStage.getBoundingClientRect();
+  const x = event.clientX - stageRect.left + 12;
+  const y = event.clientY - stageRect.top + 12;
+  chartTooltip.hidden = false;
+  chartTooltip.innerHTML = `<strong>${payload.title}</strong>${payload.lines
+    .map((line) => `<span>${line}</span>`)
+    .join("")}`;
+  chartTooltip.style.left = `${x}px`;
+  chartTooltip.style.top = `${y}px`;
+}
+
+function hideChartTooltip() {
+  chartTooltip.hidden = true;
+}
+
+function buildSvgChartMarkup(model) {
+  const width = 960;
+  const height = 380;
+  const margin = { top: 18, right: 18, bottom: 42, left: 62 };
+  const chartWidth = width - margin.left - margin.right;
+  const chartHeight = height - margin.top - margin.bottom;
+  const series = model.data;
+  const maxTotal = Math.max(...series.map((point) => point.total), 1);
+  const step = chartWidth / Math.max(series.length, 1);
+  const barWidth = Math.max(14, Math.min(40, step * 0.62));
+  const yTicks = 4;
+
+  let svg = "";
+
+  for (let tick = 0; tick <= yTicks; tick += 1) {
+    const value = (maxTotal / yTicks) * tick;
+    const y = margin.top + chartHeight - (value / maxTotal) * chartHeight;
+    svg += `<line class="chart-gridline" x1="${margin.left}" y1="${y}" x2="${width - margin.right}" y2="${y}"></line>`;
+    svg += `<text class="chart-ylabel" x="${margin.left - 10}" y="${y + 4}" text-anchor="end">${formatCurrencyShort(
+      value
+    )}</text>`;
+  }
+
+  svg += `<line class="chart-axis" x1="${margin.left}" y1="${margin.top + chartHeight}" x2="${
+    width - margin.right
+  }" y2="${margin.top + chartHeight}"></line>`;
+
+  series.forEach((point, index) => {
+    const x = margin.left + index * step + (step - barWidth) / 2;
+    let runningHeight = 0;
+
+    point.values.forEach((segment) => {
+      const segmentHeight = maxTotal > 0 ? (segment.value / maxTotal) * chartHeight : 0;
+      const y = margin.top + chartHeight - runningHeight - segmentHeight;
+      svg += `<rect class="chart-bar" data-point-index="${index}" x="${x}" y="${y}" width="${barWidth}" height="${Math.max(
+        0,
+        segmentHeight
+      )}" rx="6" fill="${segment.color}"></rect>`;
+      runningHeight += segmentHeight;
+    });
+
+    if (series.length <= 14 || index % Math.ceil(series.length / 8) === 0 || index === series.length - 1) {
+      svg += `<text class="chart-xlabel" x="${x + barWidth / 2}" y="${height - 14}" text-anchor="middle">${point.label.replace(
+        "Age ",
+        ""
+      )}</text>`;
+    }
+  });
+
+  return { svg, series };
+}
+
+function renderInteractiveChart(model) {
+  setText(outputIds.chartTitle, model.title);
+  setText(outputIds.chartSummary, model.summary);
+  setText(outputIds.chartDescription, model.description);
+  renderChartLegend(model.legend);
+
+  const { svg, series } = buildSvgChartMarkup(model);
+  interactiveChart.innerHTML = svg;
+
+  const bars = Array.from(interactiveChart.querySelectorAll(".chart-bar"));
+  bars.forEach((bar) => {
+    const pointIndex = Number(bar.getAttribute("data-point-index")) || 0;
+    const point = series[pointIndex];
+
+    bar.addEventListener("mouseenter", (event) => {
+      bars
+        .filter((candidate) => candidate.getAttribute("data-point-index") === String(pointIndex))
+        .forEach((candidate) => candidate.classList.add("is-hovered"));
+      showChartTooltip(event, model.tooltip(point));
+    });
+
+    bar.addEventListener("mousemove", (event) => {
+      showChartTooltip(event, model.tooltip(point));
+    });
+
+    bar.addEventListener("mouseleave", () => {
+      bars
+        .filter((candidate) => candidate.getAttribute("data-point-index") === String(pointIndex))
+        .forEach((candidate) => candidate.classList.remove("is-hovered"));
+      hideChartTooltip();
+    });
+  });
 }
 
 function updatePlanner() {
@@ -549,6 +871,9 @@ function updatePlanner() {
   );
   setText(outputIds.equityUsageLabel, `${equityUsageRate}%`);
   updateWithdrawalGuidance(withdrawalRate);
+
+  const chartModel = buildChartModel(inputs, currentAge, yearsToRetirement, projection);
+  renderInteractiveChart(chartModel);
 }
 
 createSavingsRow({ type: "cash_isa", balance: 20000, monthly: 150, rate: 3.5 });
@@ -562,6 +887,16 @@ addSavingsAccountButton.addEventListener("click", () => {
 withdrawalPresetButtons.forEach((button) => {
   button.addEventListener("click", () => {
     withdrawalRateInput.value = button.dataset.rate || "4";
+    updatePlanner();
+  });
+});
+
+chartModeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    chartState.mode = button.dataset.chartMode || "growth";
+    chartModeButtons.forEach((candidate) => {
+      candidate.classList.toggle("is-active", candidate === button);
+    });
     updatePlanner();
   });
 });

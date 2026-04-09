@@ -22,60 +22,6 @@
     </div>
   </header>
 
-  <section class="overview shell" aria-label="Retirement overview">
-    <div class="overview-item">
-      <span>Years to retirement</span>
-      <strong id="years-to-retirement">0</strong>
-    </div>
-    <div class="overview-item">
-      <span>Projected net worth</span>
-      <strong id="projected-net-worth">&pound;0</strong>
-    </div>
-    <div class="overview-item">
-      <span>Estimated annual income</span>
-      <strong id="estimated-income">&pound;0</strong>
-    </div>
-    <div class="overview-item overview-item-wide">
-      <span id="income-gap-label">Expected shortfall</span>
-      <strong id="income-gap">&pound;0</strong>
-      <p class="summary-note" id="income-gap-note">Compared with your inflation-adjusted spending target.</p>
-    </div>
-  </section>
-
-  <section class="answer shell" aria-labelledby="readiness-title">
-    <div class="answer-heading">
-      <p class="panel-kicker">Your result</p>
-      <h2 id="readiness-title">There is a projected retirement income gap</h2>
-      <p class="answer-copy" id="result-explainer">
-        At your planned retirement age, your projected yearly income is below what you want to spend.
-      </p>
-    </div>
-    <div class="answer-grid">
-      <div class="answer-item">
-        <span>You want to spend each year in retirement</span>
-        <strong id="future-spending-target">&pound;0</strong>
-        <p>Shown in future pounds after inflation.</p>
-      </div>
-      <div class="answer-item">
-        <span>You could generate each year</span>
-        <strong id="answer-income-output">&pound;0</strong>
-        <p>From your pension income, investments, and chosen home equity.</p>
-      </div>
-      <div class="answer-item answer-item-strong">
-        <span id="answer-difference-label">Expected shortfall</span>
-        <strong id="answer-difference">&pound;0</strong>
-        <p id="answer-difference-note">This is the yearly gap between spending and income.</p>
-      </div>
-    </div>
-    <div class="timeline-note" id="timeline-note">
-      <p class="timeline-kicker">If you keep going a bit longer</p>
-      <h3 id="extra-years-title">You may need to work 0 extra years</h3>
-      <p id="extra-years-copy">
-        Based on the assumptions above, this plan is already achievable at your chosen retirement age.
-      </p>
-    </div>
-  </section>
-
   <main class="shell layout">
     <form class="planner" id="planner" data-planner>
       <section class="panel-card">
@@ -293,6 +239,60 @@
     </form>
 
     <aside class="results">
+      <section class="overview" aria-label="Retirement overview">
+        <div class="overview-item">
+          <span>Years to retirement</span>
+          <strong id="years-to-retirement">0</strong>
+        </div>
+        <div class="overview-item">
+          <span>Projected net worth</span>
+          <strong id="projected-net-worth">&pound;0</strong>
+        </div>
+        <div class="overview-item">
+          <span>Estimated annual income</span>
+          <strong id="estimated-income">&pound;0</strong>
+        </div>
+        <div class="overview-item overview-item-wide">
+          <span id="income-gap-label">Expected shortfall</span>
+          <strong id="income-gap">&pound;0</strong>
+          <p class="summary-note" id="income-gap-note">Compared with your inflation-adjusted spending target.</p>
+        </div>
+      </section>
+
+      <section class="answer" aria-labelledby="readiness-title">
+        <div class="answer-heading">
+          <p class="panel-kicker">Your result</p>
+          <h2 id="readiness-title">There is a projected retirement income gap</h2>
+          <p class="answer-copy" id="result-explainer">
+            At your planned retirement age, your projected yearly income is below what you want to spend.
+          </p>
+        </div>
+        <div class="answer-grid">
+          <div class="answer-item">
+            <span>You want to spend each year in retirement</span>
+            <strong id="future-spending-target">&pound;0</strong>
+            <p>Shown in future pounds after inflation.</p>
+          </div>
+          <div class="answer-item">
+            <span>You could generate each year</span>
+            <strong id="answer-income-output">&pound;0</strong>
+            <p>From your pension income, investments, and chosen home equity.</p>
+          </div>
+          <div class="answer-item answer-item-strong">
+            <span id="answer-difference-label">Expected shortfall</span>
+            <strong id="answer-difference">&pound;0</strong>
+            <p id="answer-difference-note">This is the yearly gap between spending and income.</p>
+          </div>
+        </div>
+        <div class="timeline-note" id="timeline-note">
+          <p class="timeline-kicker">If you keep going a bit longer</p>
+          <h3 id="extra-years-title">You may need to work 0 extra years</h3>
+          <p id="extra-years-copy">
+            Based on the assumptions above, this plan is already achievable at your chosen retirement age.
+          </p>
+        </div>
+      </section>
+
       <section class="results-card">
         <p class="panel-kicker">How This Was Calculated</p>
         <h3>Projected balances at retirement</h3>
@@ -371,64 +371,30 @@
       </section>
 
       <section class="results-card charts-card">
-        <h3>Visual summary</h3>
-        <div class="charts-grid">
-          <div class="chart-panel">
-            <h4>Assets at retirement</h4>
-            <div class="chart-list">
-              <div class="chart-row">
-                <div class="chart-label">
-                  <span>Pension pot</span>
-                  <strong id="pension-chart-value">&pound;0</strong>
-                </div>
-                <div class="chart-track"><span class="chart-fill pension-fill" id="pension-balance-bar"></span></div>
-              </div>
-              <div class="chart-row">
-                <div class="chart-label">
-                  <span>S&amp;S ISA</span>
-                  <strong id="isa-chart-value">&pound;0</strong>
-                </div>
-                <div class="chart-track"><span class="chart-fill isa-fill" id="isa-balance-bar"></span></div>
-              </div>
-              <div class="chart-row">
-                <div class="chart-label">
-                  <span>Other accounts</span>
-                  <strong id="savings-chart-value">&pound;0</strong>
-                </div>
-                <div class="chart-track"><span class="chart-fill savings-fill" id="savings-balance-bar"></span></div>
-              </div>
-              <div class="chart-row">
-                <div class="chart-label">
-                  <span>Home equity</span>
-                  <strong id="home-chart-value">&pound;0</strong>
-                </div>
-                <div class="chart-track"><span class="chart-fill home-fill" id="home-balance-bar"></span></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="chart-panel">
-            <h4>Income versus target</h4>
-            <div class="chart-list">
-              <div class="chart-row">
-                <div class="chart-label">
-                  <span>Target yearly spending</span>
-                  <strong id="target-income-chart-value">&pound;0</strong>
-                </div>
-                <div class="chart-track"><span class="chart-fill neutral-fill" id="target-income-bar"></span></div>
-              </div>
-              <div class="chart-row">
-                <div class="chart-label">
-                  <span>Projected yearly income</span>
-                  <strong id="projected-income-chart-value">&pound;0</strong>
-                </div>
-                <div class="chart-track"><span class="chart-fill pension-fill" id="projected-income-bar"></span></div>
-              </div>
-            </div>
-            <p class="chart-note" id="results-gap-summary">
-              Your projected income is currently below your target.
+        <div class="charts-header">
+          <div>
+            <h3>Interactive charts</h3>
+            <p class="chart-note" id="chartDescription">
+              Hover the bars to inspect how your plan grows between now and retirement.
             </p>
           </div>
+          <div class="chart-mode-switch" aria-label="Chart modes">
+            <button class="chart-mode is-active" type="button" data-chart-mode="growth">Net worth growth</button>
+            <button class="chart-mode" type="button" data-chart-mode="contributions">Contributions</button>
+            <button class="chart-mode" type="button" data-chart-mode="drawdown">Drawdown</button>
+          </div>
+        </div>
+
+        <div class="chart-frame">
+          <div class="chart-meta">
+            <h4 id="chartTitle">Net worth growth to retirement</h4>
+            <p id="chartSummary">Projected total net worth grows as contributions, returns, and home equity build over time.</p>
+          </div>
+          <div class="chart-stage" id="chartStage">
+            <svg id="interactiveChart" viewBox="0 0 960 380" role="img" aria-labelledby="chartTitle"></svg>
+            <div class="chart-tooltip" id="chartTooltip" hidden></div>
+          </div>
+          <div class="chart-legend" id="chartLegend"></div>
         </div>
       </section>
 
