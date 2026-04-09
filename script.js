@@ -12,6 +12,8 @@ const planner = document.querySelector("[data-planner]");
 const savingsAccounts = document.getElementById("savingsAccounts");
 const savingsTemplate = document.getElementById("savingsAccountTemplate");
 const addSavingsAccountButton = document.getElementById("addSavingsAccount");
+const withdrawalRateInput = document.getElementById("withdrawalRate");
+const withdrawalPresetButtons = Array.from(document.querySelectorAll(".rate-preset"));
 const optionalSections = [
   { toggleId: "includePension", containerId: "pensionSection" },
   { toggleId: "includeIsa", containerId: "isaSection" },
@@ -51,6 +53,7 @@ const outputIds = {
   answerDifferenceNote: "answer-difference-note",
   extraYearsTitle: "extra-years-title",
   extraYearsCopy: "extra-years-copy",
+  withdrawalGuidance: "withdrawalGuidance",
   pensionFutureValue: "pension-future-value",
   isaFutureValue: "isa-future-value",
   savingsFutureValue: "savings-future-value",
@@ -153,6 +156,25 @@ function formatCurrency(value) {
 
 function formatPercent(value) {
   return `${Math.round(value)}%`;
+}
+
+function updateWithdrawalGuidance(withdrawalRate) {
+  let message = "A common planning starting point is around 4%. Lower numbers are more cautious.";
+
+  if (withdrawalRate <= 3.2) {
+    message = `${withdrawalRate}% is fairly cautious. It assumes you draw less each year, which can make the plan more resilient but requires a bigger pot.`;
+  } else if (withdrawalRate <= 4.2) {
+    message = `${withdrawalRate}% is in the range many people use as a planning starting point. It is not a guarantee, but it is a common baseline.`;
+  } else {
+    message = `${withdrawalRate}% is more aggressive. It boosts projected income, but it also assumes your investments can support larger withdrawals.`;
+  }
+
+  setText(outputIds.withdrawalGuidance, message);
+
+  withdrawalPresetButtons.forEach((button) => {
+    const presetRate = Number(button.dataset.rate) || 0;
+    button.classList.toggle("is-active", Math.abs(presetRate - withdrawalRate) < 0.05);
+  });
 }
 
 function createSavingsRow(values = {}) {
@@ -487,6 +509,7 @@ function updatePlanner() {
     `Home equity uses a ${mortgageRate}% mortgage rate with ${mortgageTermYears} years remaining, and ${equityUsageRate}% of projected equity is included in retirement funding.`
   );
   setText(outputIds.equityUsageLabel, `${equityUsageRate}%`);
+  updateWithdrawalGuidance(withdrawalRate);
 }
 
 createSavingsRow({ type: "cash_isa", balance: 20000, monthly: 150, rate: 3.5 });
@@ -495,6 +518,13 @@ createSavingsRow({ type: "premium_bonds", balance: 10000, monthly: 50, rate: 4.0
 addSavingsAccountButton.addEventListener("click", () => {
   createSavingsRow();
   updatePlanner();
+});
+
+withdrawalPresetButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    withdrawalRateInput.value = button.dataset.rate || "4";
+    updatePlanner();
+  });
 });
 
 optionalSections.forEach(({ toggleId }) => {

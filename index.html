@@ -109,6 +109,16 @@
           <label class="field">
             <span>Withdrawal rate used for investments (%)</span>
             <input id="withdrawalRate" type="number" min="1" max="10" step="0.1" value="4">
+            <div class="field-help withdrawal-help">
+              <p id="withdrawalGuidance">
+                A common planning starting point is around 4%. Lower numbers are more cautious.
+              </p>
+              <div class="rate-presets" aria-label="Suggested withdrawal rate presets">
+                <button class="rate-preset is-active" type="button" data-rate="3">3% cautious</button>
+                <button class="rate-preset" type="button" data-rate="4">4% common start</button>
+                <button class="rate-preset" type="button" data-rate="5">5% more aggressive</button>
+              </div>
+            </div>
           </label>
           <div class="field optional-field" id="statePensionField">
             <div class="field-top">

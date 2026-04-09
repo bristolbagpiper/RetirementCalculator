@@ -297,6 +297,18 @@ h3 {
   color: var(--ink);
 }
 
+.field-help {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.2rem;
+}
+
+.field-help p {
+  color: var(--muted);
+  font-size: 0.93rem;
+  line-height: 1.55;
+}
+
 .field input {
   width: 100%;
   padding: 0.9rem 0.95rem;
@@ -389,6 +401,36 @@ h3 {
 .remove-button:hover {
   border-color: var(--border-strong);
   background: var(--accent-soft);
+}
+
+.rate-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.rate-preset {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+}
+
+.rate-preset:hover {
+  border-color: var(--border-strong);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.rate-preset.is-active {
+  border-color: rgba(39, 104, 201, 0.32);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .section-toggle,
@@ -573,6 +615,10 @@ input[type="range"] {
   .field-top {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .rate-presets {
+    width: 100%;
   }
 
   .savings-header {
