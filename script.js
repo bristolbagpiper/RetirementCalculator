@@ -31,8 +31,12 @@ const optionalFields = [
 
 const savingsTypeDefaults = {
   cash_isa: { label: "Cash ISA", rate: 3.5 },
+  cash_lisa: { label: "Cash LISA", rate: 3.75 },
   premium_bonds: { label: "Premium Bonds", rate: 4.0 },
   hysa: { label: "High-yield savings", rate: 4.5 },
+  fixed_bond: { label: "Fixed-rate bond", rate: 4.25 },
+  notice_account: { label: "Notice account", rate: 3.75 },
+  nsi_income_bonds: { label: "NS&I Income Bonds", rate: 3.6 },
   gia: { label: "GIA", rate: 5.5 },
   savings_account: { label: "Savings account", rate: 2.5 },
 };
@@ -226,6 +230,11 @@ function getSavingsRows() {
 
 function calculateSavingsFutureValue(yearsToRetirement) {
   return getSavingsRows().reduce((total, row) => {
+    const include = row.querySelector(".savings-include")?.checked ?? true;
+    if (!include) {
+      return total;
+    }
+
     const balance = Number(row.querySelector(".savings-balance")?.value) || 0;
     const monthly = Number(row.querySelector(".savings-monthly")?.value) || 0;
     const rate = Number(row.querySelector(".savings-rate")?.value) || 0;
@@ -498,7 +507,7 @@ function updatePlanner() {
 
   setText(
     outputIds.assumptionGrowth,
-    `Monthly compounding is used for each section you leave turned on, based on the yearly rates you enter.`
+    `Monthly compounding is used for each section you leave turned on, and any extra account row marked to count for retirement.`
   );
   setText(
     outputIds.assumptionInflation,

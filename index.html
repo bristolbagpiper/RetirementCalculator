@@ -228,12 +228,17 @@
             Add as many extra accounts as you want. Choose the account type from the dropdown, then
             enter the current balance, monthly saving, and expected yearly rate.
           </p>
+          <p class="section-copy">
+            Leave "Count for retirement" on for accounts you expect to use later. Turn it off for
+            emergency funds or short-term cash you do not want included.
+          </p>
         </div>
         <div class="savings-header">
           <span>Account type</span>
           <span>Current balance</span>
           <span>Monthly saving</span>
           <span>Yearly rate (%)</span>
+          <span>Count for retirement</span>
           <span></span>
         </div>
         <div class="savings-rows" id="savingsAccounts" aria-live="polite"></div>
@@ -393,8 +398,12 @@
         <span class="sr-only">Account type</span>
         <select class="savings-type">
           <option value="cash_isa">Cash ISA</option>
+          <option value="cash_lisa">Cash LISA</option>
           <option value="premium_bonds">Premium Bonds</option>
           <option value="hysa">High-yield savings</option>
+          <option value="fixed_bond">Fixed-rate bond</option>
+          <option value="notice_account">Notice account</option>
+          <option value="nsi_income_bonds">NS&amp;I Income Bonds</option>
           <option value="gia">GIA</option>
           <option value="savings_account">Savings account</option>
         </select>
@@ -410,6 +419,10 @@
       <label class="field">
         <span class="sr-only">Yearly rate</span>
         <input class="savings-rate" type="number" min="0" max="15" step="0.1" value="0">
+      </label>
+      <label class="savings-check">
+        <input class="savings-include" type="checkbox" checked>
+        <span>Use</span>
       </label>
       <button class="remove-button" type="button">Remove</button>
     </div>
