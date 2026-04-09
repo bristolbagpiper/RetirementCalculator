@@ -16,11 +16,6 @@ const outputIds = {
   estimatedIncome: "estimated-income",
   incomeGap: "income-gap",
   incomeGapNote: "income-gap-note",
-  heroYears: "hero-years",
-  heroNetWorth: "hero-net-worth",
-  heroIncome: "hero-income",
-  heroEquity: "hero-equity",
-  heroTarget: "hero-target",
   readinessTitle: "readiness-title",
   futureSpendingTarget: "future-spending-target",
   pensionFutureValue: "pension-future-value",
@@ -171,12 +166,6 @@ function updatePlanner() {
       ? "Your estimated income is above your inflation-adjusted target."
       : "Your estimated income is below your inflation-adjusted target."
   );
-
-  setText(outputIds.heroYears, `${numberFormatter.format(yearsToRetirement)} years`);
-  setText(outputIds.heroNetWorth, formatCurrency(projectedNetWorth));
-  setText(outputIds.heroIncome, formatCurrency(estimatedIncome));
-  setText(outputIds.heroEquity, formatCurrency(homeEquityFuture));
-  setText(outputIds.heroTarget, formatCurrency(futureSpendingTarget));
 
   setText(outputIds.readinessTitle, readinessTitle);
   setText(outputIds.futureSpendingTarget, formatCurrency(futureSpendingTarget));
