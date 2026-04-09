@@ -228,17 +228,12 @@
             Add as many extra accounts as you want. Choose the account type from the dropdown, then
             enter the current balance, monthly saving, and expected yearly rate.
           </p>
-          <p class="section-copy">
-            Leave "Count for retirement" on for accounts you expect to use later. Turn it off for
-            emergency funds or short-term cash you do not want included.
-          </p>
         </div>
         <div class="savings-header">
           <span>Account type</span>
           <span>Current balance</span>
           <span>Monthly saving</span>
           <span>Yearly rate (%)</span>
-          <span>Count for retirement</span>
           <span></span>
         </div>
         <div class="savings-rows" id="savingsAccounts" aria-live="polite"></div>
@@ -419,10 +414,6 @@
       <label class="field">
         <span class="sr-only">Yearly rate</span>
         <input class="savings-rate" type="number" min="0" max="15" step="0.1" value="0">
-      </label>
-      <label class="savings-check">
-        <input class="savings-include" type="checkbox" checked>
-        <span>Use</span>
       </label>
       <button class="remove-button" type="button">Remove</button>
     </div>

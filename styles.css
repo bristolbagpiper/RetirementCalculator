@@ -348,7 +348,7 @@ h3 {
 .savings-header,
 .savings-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) repeat(3, minmax(0, 1fr)) minmax(120px, 0.8fr) auto;
+  grid-template-columns: minmax(0, 1.25fr) repeat(3, minmax(0, 1fr)) auto;
   gap: 0.85rem;
   align-items: end;
 }
@@ -374,22 +374,6 @@ h3 {
   border: 1px solid var(--border);
   border-radius: 18px;
   background: var(--surface-soft);
-}
-
-.savings-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  align-self: center;
-  color: var(--muted);
-  font-size: 0.92rem;
-  font-weight: 700;
-}
-
-.savings-check input {
-  width: 1rem;
-  height: 1rem;
-  accent-color: var(--accent);
 }
 
 .secondary-button,

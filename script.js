@@ -230,11 +230,6 @@ function getSavingsRows() {
 
 function calculateSavingsFutureValue(yearsToRetirement) {
   return getSavingsRows().reduce((total, row) => {
-    const include = row.querySelector(".savings-include")?.checked ?? true;
-    if (!include) {
-      return total;
-    }
-
     const balance = Number(row.querySelector(".savings-balance")?.value) || 0;
     const monthly = Number(row.querySelector(".savings-monthly")?.value) || 0;
     const rate = Number(row.querySelector(".savings-rate")?.value) || 0;
@@ -507,7 +502,7 @@ function updatePlanner() {
 
   setText(
     outputIds.assumptionGrowth,
-    `Monthly compounding is used for each section you leave turned on, and any extra account row marked to count for retirement.`
+    `Monthly compounding is used for each section you leave turned on, based on the yearly rates you enter.`
   );
   setText(
     outputIds.assumptionInflation,
