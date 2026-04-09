@@ -80,19 +80,19 @@ h3 {
 }
 
 .hero-copy {
-  padding: 1.8rem;
+  padding: 2.25rem 2.5rem;
 }
 
 .hero h1 {
   margin-top: 0.65rem;
   font-size: clamp(2.2rem, 4vw, 3.8rem);
   line-height: 1;
-  max-width: 13ch;
+  max-width: 18ch;
 }
 
 .hero-text {
   margin-top: 1rem;
-  max-width: 58ch;
+  max-width: 72ch;
   color: var(--muted);
   line-height: 1.6;
   font-size: 1.02rem;
@@ -200,6 +200,34 @@ h3 {
   color: var(--accent-strong);
 }
 
+.timeline-note {
+  margin-top: 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: rgba(24, 74, 145, 0.06);
+  border: 1px solid var(--border);
+}
+
+.timeline-kicker {
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.timeline-note h3 {
+  margin-top: 0.35rem;
+  font-size: 1.35rem;
+}
+
+.timeline-note p:last-child {
+  margin-top: 0.45rem;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
@@ -220,6 +248,13 @@ h3 {
 
 .panel-heading {
   margin-bottom: 1.15rem;
+}
+
+.panel-heading-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .panel-heading h2 {
@@ -248,6 +283,13 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+}
+
+.field-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .field span {
@@ -347,6 +389,29 @@ h3 {
 .remove-button:hover {
   border-color: var(--border-strong);
   background: var(--accent-soft);
+}
+
+.section-toggle,
+.mini-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.section-toggle input,
+.mini-toggle input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+}
+
+.panel-card.is-disabled,
+.optional-field.is-disabled {
+  opacity: 0.55;
 }
 
 .range-wrap {
@@ -488,6 +553,10 @@ input[type="range"] {
     padding-top: 1rem;
   }
 
+  .hero-copy {
+    padding: 1.4rem;
+  }
+
   .overview {
     padding: 1rem;
   }
@@ -498,6 +567,12 @@ input[type="range"] {
 
   .two-up {
     grid-template-columns: 1fr;
+  }
+
+  .panel-heading-top,
+  .field-top {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .savings-header {

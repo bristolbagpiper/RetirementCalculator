@@ -67,6 +67,13 @@
         <p id="answer-difference-note">This is the yearly gap between spending and income.</p>
       </div>
     </div>
+    <div class="timeline-note" id="timeline-note">
+      <p class="timeline-kicker">If you keep going a bit longer</p>
+      <h3 id="extra-years-title">You may need to work 0 extra years</h3>
+      <p id="extra-years-copy">
+        Based on the assumptions above, this plan is already achievable at your chosen retirement age.
+      </p>
+    </div>
   </section>
 
   <main class="shell layout">
@@ -103,21 +110,41 @@
             <span>Withdrawal rate used for investments (%)</span>
             <input id="withdrawalRate" type="number" min="1" max="10" step="0.1" value="4">
           </label>
-          <label class="field">
-            <span>State or public pension income per year</span>
+          <div class="field optional-field" id="statePensionField">
+            <div class="field-top">
+              <span>State or public pension income per year</span>
+              <label class="mini-toggle">
+                <input id="includeStatePension" type="checkbox" checked>
+                <span>Include</span>
+              </label>
+            </div>
             <input id="statePensionIncome" type="number" min="0" step="1000" value="12000">
-          </label>
-          <label class="field">
-            <span>Other guaranteed income per year</span>
+          </div>
+          <div class="field optional-field" id="otherGuaranteedIncomeField">
+            <div class="field-top">
+              <span>Other guaranteed income per year</span>
+              <label class="mini-toggle">
+                <input id="includeOtherGuaranteedIncome" type="checkbox">
+                <span>Include</span>
+              </label>
+            </div>
             <input id="otherGuaranteedIncome" type="number" min="0" step="1000" value="0">
-          </label>
+          </div>
         </div>
       </section>
 
-      <section class="panel-card">
+      <section class="panel-card" id="pensionSection">
         <div class="panel-heading">
-          <p class="panel-kicker">Pension</p>
-          <h2>Private pension projection</h2>
+          <div class="panel-heading-top">
+            <div>
+              <p class="panel-kicker">Pension</p>
+              <h2>Private pension projection</h2>
+            </div>
+            <label class="section-toggle">
+              <input id="includePension" type="checkbox" checked>
+              <span>Include this section</span>
+            </label>
+          </div>
           <p class="section-copy">
             This projects the future value of your pension pot using contributions plus compound growth.
           </p>
@@ -142,10 +169,18 @@
         </div>
       </section>
 
-      <section class="panel-card">
+      <section class="panel-card" id="isaSection">
         <div class="panel-heading">
-          <p class="panel-kicker">S&amp;S ISA</p>
-          <h2>ISA compound growth</h2>
+          <div class="panel-heading-top">
+            <div>
+              <p class="panel-kicker">S&amp;S ISA</p>
+              <h2>ISA compound growth</h2>
+            </div>
+            <label class="section-toggle">
+              <input id="includeIsa" type="checkbox" checked>
+              <span>Include this section</span>
+            </label>
+          </div>
           <p class="section-copy">
             Add your current ISA and monthly investing amount to estimate how much tax-free money it
             could hold by retirement.
@@ -167,10 +202,18 @@
         </div>
       </section>
 
-      <section class="panel-card">
+      <section class="panel-card" id="otherAccountsSection">
         <div class="panel-heading">
-          <p class="panel-kicker">Other Accounts</p>
-          <h2>Cash ISA, Premium Bonds, HYSA, GIA and savings accounts</h2>
+          <div class="panel-heading-top">
+            <div>
+              <p class="panel-kicker">Other Accounts</p>
+              <h2>Cash ISA, Premium Bonds, HYSA, GIA and savings accounts</h2>
+            </div>
+            <label class="section-toggle">
+              <input id="includeOtherAccounts" type="checkbox" checked>
+              <span>Include this section</span>
+            </label>
+          </div>
           <p class="section-copy">
             Add as many extra accounts as you want. Choose the account type from the dropdown, then
             enter the current balance, monthly saving, and expected yearly rate.
@@ -189,10 +232,18 @@
         </button>
       </section>
 
-      <section class="panel-card">
+      <section class="panel-card" id="homeSection">
         <div class="panel-heading">
-          <p class="panel-kicker">Home</p>
-          <h2>Property and home equity</h2>
+          <div class="panel-heading-top">
+            <div>
+              <p class="panel-kicker">Home</p>
+              <h2>Property and home equity</h2>
+            </div>
+            <label class="section-toggle">
+              <input id="includeHome" type="checkbox" checked>
+              <span>Include this section</span>
+            </label>
+          </div>
           <p class="section-copy">
             Use this section only if you expect your home to contribute to retirement through selling,
             downsizing, or releasing equity.
@@ -326,8 +377,6 @@
     </div>
   </noscript>
 
-  <script src="script.js"></script>
-
   <template id="savingsAccountTemplate">
     <div class="savings-row">
       <label class="field">
@@ -355,5 +404,7 @@
       <button class="remove-button" type="button">Remove</button>
     </div>
   </template>
+
+  <script src="script.js"></script>
 </body>
 </html>

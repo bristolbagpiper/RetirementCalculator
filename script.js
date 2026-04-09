@@ -12,6 +12,20 @@ const planner = document.querySelector("[data-planner]");
 const savingsAccounts = document.getElementById("savingsAccounts");
 const savingsTemplate = document.getElementById("savingsAccountTemplate");
 const addSavingsAccountButton = document.getElementById("addSavingsAccount");
+const optionalSections = [
+  { toggleId: "includePension", containerId: "pensionSection" },
+  { toggleId: "includeIsa", containerId: "isaSection" },
+  { toggleId: "includeOtherAccounts", containerId: "otherAccountsSection" },
+  { toggleId: "includeHome", containerId: "homeSection" },
+];
+const optionalFields = [
+  { toggleId: "includeStatePension", containerId: "statePensionField", inputId: "statePensionIncome" },
+  {
+    toggleId: "includeOtherGuaranteedIncome",
+    containerId: "otherGuaranteedIncomeField",
+    inputId: "otherGuaranteedIncome",
+  },
+];
 
 const savingsTypeDefaults = {
   cash_isa: { label: "Cash ISA", rate: 3.5 },
@@ -35,6 +49,8 @@ const outputIds = {
   answerDifferenceLabel: "answer-difference-label",
   answerDifference: "answer-difference",
   answerDifferenceNote: "answer-difference-note",
+  extraYearsTitle: "extra-years-title",
+  extraYearsCopy: "extra-years-copy",
   pensionFutureValue: "pension-future-value",
   isaFutureValue: "isa-future-value",
   savingsFutureValue: "savings-future-value",
@@ -196,67 +212,179 @@ function calculateSavingsFutureValue(yearsToRetirement) {
   }, 0);
 }
 
+function isChecked(id) {
+  const field = document.getElementById(id);
+  return Boolean(field?.checked);
+}
+
+function syncOptionalUi() {
+  optionalSections.forEach(({ toggleId, containerId }) => {
+    const enabled = isChecked(toggleId);
+    const container = document.getElementById(containerId);
+    if (!container) {
+      return;
+    }
+
+    container.classList.toggle("is-disabled", !enabled);
+    container.querySelectorAll("input, select, button").forEach((field) => {
+      if (field.id === toggleId) {
+        field.disabled = false;
+      } else {
+        field.disabled = !enabled;
+      }
+    });
+  });
+
+  optionalFields.forEach(({ toggleId, containerId, inputId }) => {
+    const enabled = isChecked(toggleId);
+    const container = document.getElementById(containerId);
+    const input = document.getElementById(inputId);
+    if (!container || !input) {
+      return;
+    }
+
+    container.classList.toggle("is-disabled", !enabled);
+    input.disabled = !enabled;
+  });
+}
+
+function calculateProjection(inputs, yearsToRetirement) {
+  const pensionFuture = futureValueWithMonthlyContributions(
+    inputs.pensionCurrent,
+    inputs.pensionMonthlyTotal,
+    inputs.pensionReturn,
+    yearsToRetirement
+  );
+
+  const isaFuture = futureValueWithMonthlyContributions(
+    inputs.isaCurrent,
+    inputs.isaMonthly,
+    inputs.isaReturn,
+    yearsToRetirement
+  );
+
+  const savingsFuture = inputs.includeOtherAccounts
+    ? calculateSavingsFutureValue(yearsToRetirement)
+    : 0;
+  const homeValueFuture = futureValueLumpSum(inputs.homeValue, inputs.homeGrowth, yearsToRetirement);
+  const projectedMortgageBalance = calculateMortgageBalanceAtRetirement(
+    inputs.mortgageBalance,
+    inputs.mortgageRate,
+    inputs.mortgageTermYears,
+    yearsToRetirement
+  );
+  const homeEquityFuture = Math.max(0, homeValueFuture - projectedMortgageBalance);
+  const usableHomeEquity = homeEquityFuture * (inputs.equityUsageRate / 100);
+
+  const projectedNetWorth = pensionFuture + isaFuture + savingsFuture + homeEquityFuture;
+  const futureSpendingTarget =
+    inputs.targetSpending * Math.pow(1 + inputs.inflationRate / 100, Math.max(0, yearsToRetirement));
+  const accessibleAssets = pensionFuture + isaFuture + savingsFuture + usableHomeEquity;
+  const drawdownIncome = accessibleAssets * (inputs.withdrawalRate / 100);
+  const estimatedIncome = drawdownIncome + inputs.guaranteedIncome;
+  const incomeGap = estimatedIncome - futureSpendingTarget;
+
+  return {
+    pensionFuture,
+    isaFuture,
+    savingsFuture,
+    homeEquityFuture,
+    usableHomeEquity,
+    projectedNetWorth,
+    futureSpendingTarget,
+    drawdownIncome,
+    estimatedIncome,
+    incomeGap,
+  };
+}
+
+function findAdditionalYearsNeeded(inputs, baseYearsToRetirement) {
+  const maxExtraYears = 40;
+
+  for (let extraYears = 0; extraYears <= maxExtraYears; extraYears += 1) {
+    const projection = calculateProjection(inputs, baseYearsToRetirement + extraYears);
+    if (projection.incomeGap >= 0) {
+      return {
+        extraYears,
+        achievableAge: inputs.retirementAge + extraYears,
+        projection,
+      };
+    }
+  }
+
+  return null;
+}
+
 function updatePlanner() {
+  syncOptionalUi();
+
   const currentAge = readNumber("currentAge");
   const retirementAge = readNumber("retirementAge");
   const targetSpending = readNumber("targetSpending");
   const inflationRate = readNumber("inflationRate");
   const withdrawalRate = readNumber("withdrawalRate");
-  const statePensionIncome = readNumber("statePensionIncome");
-  const otherGuaranteedIncome = readNumber("otherGuaranteedIncome");
+  const includeStatePension = isChecked("includeStatePension");
+  const includeOtherGuaranteedIncome = isChecked("includeOtherGuaranteedIncome");
+  const includePension = isChecked("includePension");
+  const includeIsa = isChecked("includeIsa");
+  const includeOtherAccounts = isChecked("includeOtherAccounts");
+  const includeHome = isChecked("includeHome");
+
+  const statePensionIncome = includeStatePension ? readNumber("statePensionIncome") : 0;
+  const otherGuaranteedIncome = includeOtherGuaranteedIncome ? readNumber("otherGuaranteedIncome") : 0;
   const guaranteedIncome = statePensionIncome + otherGuaranteedIncome;
 
-  const pensionCurrent = readNumber("pensionCurrent");
-  const pensionReturn = readNumber("pensionReturn");
-  const pensionMonthlyEmployee = readNumber("pensionMonthlyEmployee");
-  const pensionMonthlyEmployer = readNumber("pensionMonthlyEmployer");
+  const pensionCurrent = includePension ? readNumber("pensionCurrent") : 0;
+  const pensionReturn = includePension ? readNumber("pensionReturn") : 0;
+  const pensionMonthlyEmployee = includePension ? readNumber("pensionMonthlyEmployee") : 0;
+  const pensionMonthlyEmployer = includePension ? readNumber("pensionMonthlyEmployer") : 0;
 
-  const isaCurrent = readNumber("isaCurrent");
-  const isaReturn = readNumber("isaReturn");
-  const isaMonthly = readNumber("isaMonthly");
+  const isaCurrent = includeIsa ? readNumber("isaCurrent") : 0;
+  const isaReturn = includeIsa ? readNumber("isaReturn") : 0;
+  const isaMonthly = includeIsa ? readNumber("isaMonthly") : 0;
 
-  const homeValue = readNumber("homeValue");
-  const homeGrowth = readNumber("homeGrowth");
-  const mortgageBalance = readNumber("mortgageBalance");
-  const mortgageRate = readNumber("mortgageRate");
-  const mortgageTermYears = readNumber("mortgageTermYears");
-  const equityUsageRate = readNumber("equityUsageRate");
+  const homeValue = includeHome ? readNumber("homeValue") : 0;
+  const homeGrowth = includeHome ? readNumber("homeGrowth") : 0;
+  const mortgageBalance = includeHome ? readNumber("mortgageBalance") : 0;
+  const mortgageRate = includeHome ? readNumber("mortgageRate") : 0;
+  const mortgageTermYears = includeHome ? readNumber("mortgageTermYears") : 0;
+  const equityUsageRate = includeHome ? readNumber("equityUsageRate") : 0;
 
   const yearsToRetirement = Math.max(0, retirementAge - currentAge);
-  const pensionMonthlyTotal = pensionMonthlyEmployee + pensionMonthlyEmployer;
-
-  const pensionFuture = futureValueWithMonthlyContributions(
+  const inputs = {
+    retirementAge,
+    targetSpending,
+    inflationRate,
+    withdrawalRate,
+    guaranteedIncome,
     pensionCurrent,
-    pensionMonthlyTotal,
     pensionReturn,
-    yearsToRetirement
-  );
-
-  const isaFuture = futureValueWithMonthlyContributions(
+    pensionMonthlyTotal: pensionMonthlyEmployee + pensionMonthlyEmployer,
     isaCurrent,
-    isaMonthly,
     isaReturn,
-    yearsToRetirement
-  );
-  const savingsFuture = calculateSavingsFutureValue(yearsToRetirement);
-
-  const homeValueFuture = futureValueLumpSum(homeValue, homeGrowth, yearsToRetirement);
-  const projectedMortgageBalance = calculateMortgageBalanceAtRetirement(
+    isaMonthly,
+    includeOtherAccounts,
+    homeValue,
+    homeGrowth,
     mortgageBalance,
     mortgageRate,
     mortgageTermYears,
-    yearsToRetirement
-  );
-  const homeEquityFuture = Math.max(0, homeValueFuture - projectedMortgageBalance);
-  const usableHomeEquity = homeEquityFuture * (equityUsageRate / 100);
+    equityUsageRate,
+  };
 
-  const projectedNetWorth = pensionFuture + isaFuture + savingsFuture + homeEquityFuture;
-  const futureSpendingTarget =
-    targetSpending * Math.pow(1 + inflationRate / 100, Math.max(0, yearsToRetirement));
-  const accessibleAssets = pensionFuture + isaFuture + savingsFuture + usableHomeEquity;
-  const drawdownIncome = accessibleAssets * (withdrawalRate / 100);
-  const estimatedIncome = drawdownIncome + guaranteedIncome;
-  const incomeGap = estimatedIncome - futureSpendingTarget;
+  const projection = calculateProjection(inputs, yearsToRetirement);
+  const {
+    pensionFuture,
+    isaFuture,
+    savingsFuture,
+    homeEquityFuture,
+    usableHomeEquity,
+    projectedNetWorth,
+    futureSpendingTarget,
+    drawdownIncome,
+    estimatedIncome,
+    incomeGap,
+  } = projection;
 
   const pensionShare = projectedNetWorth > 0 ? (pensionFuture / projectedNetWorth) * 100 : 0;
   const isaShare = projectedNetWorth > 0 ? (isaFuture / projectedNetWorth) * 100 : 0;
@@ -300,6 +428,31 @@ function updatePlanner() {
       : "This is the extra yearly income you would still need."
   );
 
+  const additionalYears = findAdditionalYearsNeeded(inputs, yearsToRetirement);
+  if (!additionalYears) {
+    setText(outputIds.extraYearsTitle, "This plan does not become achievable within 40 extra years");
+    setText(
+      outputIds.extraYearsCopy,
+      "Using the same contributions, growth rates, and income assumptions, delaying retirement alone does not close the gap within the next 40 years."
+    );
+  } else if (additionalYears.extraYears === 0) {
+    setText(outputIds.extraYearsTitle, "You do not need extra years beyond your chosen age");
+    setText(
+      outputIds.extraYearsCopy,
+      `Based on these assumptions, the plan is already achievable at age ${retirementAge}.`
+    );
+  } else {
+    const yearLabel = additionalYears.extraYears === 1 ? "year" : "years";
+    setText(
+      outputIds.extraYearsTitle,
+      `You may need to work ${additionalYears.extraYears} extra ${yearLabel}`
+    );
+    setText(
+      outputIds.extraYearsCopy,
+      `Keeping the same contributions and assumptions, the plan first becomes achievable at about age ${additionalYears.achievableAge}.`
+    );
+  }
+
   setText(outputIds.pensionFutureValue, formatCurrency(pensionFuture));
   setText(outputIds.isaFutureValue, formatCurrency(isaFuture));
   setText(outputIds.savingsFutureValue, formatCurrency(savingsFuture));
@@ -323,7 +476,7 @@ function updatePlanner() {
 
   setText(
     outputIds.assumptionGrowth,
-    `Monthly compounding is used for your pension, S&S ISA, and each extra account based on the yearly rates you enter.`
+    `Monthly compounding is used for each section you leave turned on, based on the yearly rates you enter.`
   );
   setText(
     outputIds.assumptionInflation,
@@ -342,6 +495,14 @@ createSavingsRow({ type: "premium_bonds", balance: 10000, monthly: 50, rate: 4.0
 addSavingsAccountButton.addEventListener("click", () => {
   createSavingsRow();
   updatePlanner();
+});
+
+optionalSections.forEach(({ toggleId }) => {
+  document.getElementById(toggleId)?.addEventListener("change", updatePlanner);
+});
+
+optionalFields.forEach(({ toggleId }) => {
+  document.getElementById(toggleId)?.addEventListener("change", updatePlanner);
 });
 
 planner.addEventListener("input", updatePlanner);
