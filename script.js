@@ -63,6 +63,19 @@ const outputIds = {
   savingsFutureValue: "savings-future-value",
   homeEquityValue: "home-equity-value",
   usableEquityValue: "usable-equity-value",
+  pensionChartValue: "pension-chart-value",
+  isaChartValue: "isa-chart-value",
+  savingsChartValue: "savings-chart-value",
+  homeChartValue: "home-chart-value",
+  pensionBalanceBar: "pension-balance-bar",
+  isaBalanceBar: "isa-balance-bar",
+  savingsBalanceBar: "savings-balance-bar",
+  homeBalanceBar: "home-balance-bar",
+  targetIncomeChartValue: "target-income-chart-value",
+  projectedIncomeChartValue: "projected-income-chart-value",
+  targetIncomeBar: "target-income-bar",
+  projectedIncomeBar: "projected-income-bar",
+  resultsGapSummary: "results-gap-summary",
   pensionShare: "pension-share",
   isaShare: "isa-share",
   savingsShare: "savings-share",
@@ -484,6 +497,28 @@ function updatePlanner() {
   setText(outputIds.savingsFutureValue, formatCurrency(savingsFuture));
   setText(outputIds.homeEquityValue, formatCurrency(homeEquityFuture));
   setText(outputIds.usableEquityValue, formatCurrency(usableHomeEquity));
+  setText(outputIds.pensionChartValue, formatCurrency(pensionFuture));
+  setText(outputIds.isaChartValue, formatCurrency(isaFuture));
+  setText(outputIds.savingsChartValue, formatCurrency(savingsFuture));
+  setText(outputIds.homeChartValue, formatCurrency(homeEquityFuture));
+
+  const maxAssetValue = Math.max(pensionFuture, isaFuture, savingsFuture, homeEquityFuture, 1);
+  setWidth(outputIds.pensionBalanceBar, (pensionFuture / maxAssetValue) * 100);
+  setWidth(outputIds.isaBalanceBar, (isaFuture / maxAssetValue) * 100);
+  setWidth(outputIds.savingsBalanceBar, (savingsFuture / maxAssetValue) * 100);
+  setWidth(outputIds.homeBalanceBar, (homeEquityFuture / maxAssetValue) * 100);
+
+  const maxIncomeValue = Math.max(futureSpendingTarget, estimatedIncome, 1);
+  setText(outputIds.targetIncomeChartValue, formatCurrency(futureSpendingTarget));
+  setText(outputIds.projectedIncomeChartValue, formatCurrency(estimatedIncome));
+  setWidth(outputIds.targetIncomeBar, (futureSpendingTarget / maxIncomeValue) * 100);
+  setWidth(outputIds.projectedIncomeBar, (estimatedIncome / maxIncomeValue) * 100);
+  setText(
+    outputIds.resultsGapSummary,
+    incomeGap >= 0
+      ? `Your projected income is about ${formatCurrency(Math.abs(incomeGap))} above your target.`
+      : `Your projected income is about ${formatCurrency(Math.abs(incomeGap))} below your target.`
+  );
 
   setWidth(outputIds.pensionShare, pensionShare);
   setWidth(outputIds.isaShare, isaShare);
