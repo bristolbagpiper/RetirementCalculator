@@ -9,6 +9,17 @@ const numberFormatter = new Intl.NumberFormat("en-GB", {
 });
 
 const planner = document.querySelector("[data-planner]");
+const savingsAccounts = document.getElementById("savingsAccounts");
+const savingsTemplate = document.getElementById("savingsAccountTemplate");
+const addSavingsAccountButton = document.getElementById("addSavingsAccount");
+
+const savingsTypeDefaults = {
+  cash_isa: { label: "Cash ISA", rate: 3.5 },
+  premium_bonds: { label: "Premium Bonds", rate: 4.0 },
+  hysa: { label: "High-yield savings", rate: 4.5 },
+  gia: { label: "GIA", rate: 5.5 },
+  savings_account: { label: "Savings account", rate: 2.5 },
+};
 
 const outputIds = {
   yearsToRetirement: "years-to-retirement",
@@ -26,16 +37,20 @@ const outputIds = {
   answerDifferenceNote: "answer-difference-note",
   pensionFutureValue: "pension-future-value",
   isaFutureValue: "isa-future-value",
+  savingsFutureValue: "savings-future-value",
   homeEquityValue: "home-equity-value",
   usableEquityValue: "usable-equity-value",
   pensionShare: "pension-share",
   isaShare: "isa-share",
+  savingsShare: "savings-share",
   homeShare: "home-share",
   pensionShareLabel: "pension-share-label",
   isaShareLabel: "isa-share-label",
+  savingsShareLabel: "savings-share-label",
   homeShareLabel: "home-share-label",
   drawdownIncome: "drawdown-income",
-  guaranteedIncomeOutput: "guaranteed-income-output",
+  statePensionIncomeOutput: "state-pension-income-output",
+  otherGuaranteedIncomeOutput: "other-guaranteed-income-output",
   totalIncomeOutput: "total-income-output",
   assumptionGrowth: "assumption-growth",
   assumptionInflation: "assumption-inflation",
@@ -85,6 +100,37 @@ function futureValueLumpSum(initial, annualRate, years) {
   return initial * Math.pow(1 + annualRate / 100, Math.max(0, years));
 }
 
+function calculateMortgageBalanceAtRetirement(balance, annualRate, termYears, yearsToRetirement) {
+  const startingBalance = Math.max(0, balance);
+  const totalMonthsRemaining = Math.max(0, Math.round(termYears * 12));
+  const monthsUntilRetirement = Math.max(0, Math.round(yearsToRetirement * 12));
+
+  if (startingBalance === 0 || totalMonthsRemaining === 0) {
+    return 0;
+  }
+
+  if (monthsUntilRetirement >= totalMonthsRemaining) {
+    return 0;
+  }
+
+  const monthlyRate = annualRate / 100 / 12;
+
+  if (monthlyRate === 0) {
+    const monthlyPayment = startingBalance / totalMonthsRemaining;
+    return Math.max(0, startingBalance - monthlyPayment * monthsUntilRetirement);
+  }
+
+  const monthlyPayment =
+    startingBalance *
+    (monthlyRate / (1 - Math.pow(1 + monthlyRate, -totalMonthsRemaining)));
+
+  const remainingBalance =
+    startingBalance * Math.pow(1 + monthlyRate, monthsUntilRetirement) -
+    monthlyPayment * ((Math.pow(1 + monthlyRate, monthsUntilRetirement) - 1) / monthlyRate);
+
+  return Math.max(0, remainingBalance);
+}
+
 function formatCurrency(value) {
   return currencyFormatter.format(Number.isFinite(value) ? value : 0);
 }
@@ -93,13 +139,72 @@ function formatPercent(value) {
   return `${Math.round(value)}%`;
 }
 
+function createSavingsRow(values = {}) {
+  const fragment = savingsTemplate.content.cloneNode(true);
+  const row = fragment.querySelector(".savings-row");
+  const typeField = fragment.querySelector(".savings-type");
+  const balanceField = fragment.querySelector(".savings-balance");
+  const monthlyField = fragment.querySelector(".savings-monthly");
+  const rateField = fragment.querySelector(".savings-rate");
+  const removeButton = fragment.querySelector(".remove-button");
+
+  const selectedType = values.type || "cash_isa";
+  const defaultRate = savingsTypeDefaults[selectedType].rate;
+
+  typeField.value = selectedType;
+  balanceField.value = values.balance ?? 0;
+  monthlyField.value = values.monthly ?? 0;
+  rateField.value = values.rate ?? defaultRate;
+  rateField.dataset.suggestedRate = String(defaultRate);
+
+  typeField.addEventListener("change", () => {
+    const nextDefault = savingsTypeDefaults[typeField.value].rate;
+    const currentValue = Number(rateField.value) || 0;
+    const suggestedRate = Number(rateField.dataset.suggestedRate) || 0;
+
+    if (currentValue === 0 || currentValue === suggestedRate) {
+      rateField.value = nextDefault;
+    }
+
+    rateField.dataset.suggestedRate = String(nextDefault);
+
+    updatePlanner();
+  });
+
+  removeButton.addEventListener("click", () => {
+    row.remove();
+    if (!savingsAccounts.children.length) {
+      createSavingsRow();
+    }
+    updatePlanner();
+  });
+
+  savingsAccounts.appendChild(fragment);
+}
+
+function getSavingsRows() {
+  return Array.from(savingsAccounts.querySelectorAll(".savings-row"));
+}
+
+function calculateSavingsFutureValue(yearsToRetirement) {
+  return getSavingsRows().reduce((total, row) => {
+    const balance = Number(row.querySelector(".savings-balance")?.value) || 0;
+    const monthly = Number(row.querySelector(".savings-monthly")?.value) || 0;
+    const rate = Number(row.querySelector(".savings-rate")?.value) || 0;
+
+    return total + futureValueWithMonthlyContributions(balance, monthly, rate, yearsToRetirement);
+  }, 0);
+}
+
 function updatePlanner() {
   const currentAge = readNumber("currentAge");
   const retirementAge = readNumber("retirementAge");
   const targetSpending = readNumber("targetSpending");
   const inflationRate = readNumber("inflationRate");
   const withdrawalRate = readNumber("withdrawalRate");
-  const guaranteedIncome = readNumber("guaranteedIncome");
+  const statePensionIncome = readNumber("statePensionIncome");
+  const otherGuaranteedIncome = readNumber("otherGuaranteedIncome");
+  const guaranteedIncome = statePensionIncome + otherGuaranteedIncome;
 
   const pensionCurrent = readNumber("pensionCurrent");
   const pensionReturn = readNumber("pensionReturn");
@@ -113,7 +218,8 @@ function updatePlanner() {
   const homeValue = readNumber("homeValue");
   const homeGrowth = readNumber("homeGrowth");
   const mortgageBalance = readNumber("mortgageBalance");
-  const mortgageMonthlyReduction = readNumber("mortgageMonthlyReduction");
+  const mortgageRate = readNumber("mortgageRate");
+  const mortgageTermYears = readNumber("mortgageTermYears");
   const equityUsageRate = readNumber("equityUsageRate");
 
   const yearsToRetirement = Math.max(0, retirementAge - currentAge);
@@ -132,25 +238,29 @@ function updatePlanner() {
     isaReturn,
     yearsToRetirement
   );
+  const savingsFuture = calculateSavingsFutureValue(yearsToRetirement);
 
   const homeValueFuture = futureValueLumpSum(homeValue, homeGrowth, yearsToRetirement);
-  const projectedMortgageBalance = Math.max(
-    0,
-    mortgageBalance - mortgageMonthlyReduction * 12 * yearsToRetirement
+  const projectedMortgageBalance = calculateMortgageBalanceAtRetirement(
+    mortgageBalance,
+    mortgageRate,
+    mortgageTermYears,
+    yearsToRetirement
   );
   const homeEquityFuture = Math.max(0, homeValueFuture - projectedMortgageBalance);
   const usableHomeEquity = homeEquityFuture * (equityUsageRate / 100);
 
-  const projectedNetWorth = pensionFuture + isaFuture + homeEquityFuture;
+  const projectedNetWorth = pensionFuture + isaFuture + savingsFuture + homeEquityFuture;
   const futureSpendingTarget =
     targetSpending * Math.pow(1 + inflationRate / 100, Math.max(0, yearsToRetirement));
-  const accessibleAssets = pensionFuture + isaFuture + usableHomeEquity;
+  const accessibleAssets = pensionFuture + isaFuture + savingsFuture + usableHomeEquity;
   const drawdownIncome = accessibleAssets * (withdrawalRate / 100);
   const estimatedIncome = drawdownIncome + guaranteedIncome;
   const incomeGap = estimatedIncome - futureSpendingTarget;
 
   const pensionShare = projectedNetWorth > 0 ? (pensionFuture / projectedNetWorth) * 100 : 0;
   const isaShare = projectedNetWorth > 0 ? (isaFuture / projectedNetWorth) * 100 : 0;
+  const savingsShare = projectedNetWorth > 0 ? (savingsFuture / projectedNetWorth) * 100 : 0;
   const homeShare = projectedNetWorth > 0 ? (homeEquityFuture / projectedNetWorth) * 100 : 0;
 
   const readinessTitle =
@@ -192,24 +302,28 @@ function updatePlanner() {
 
   setText(outputIds.pensionFutureValue, formatCurrency(pensionFuture));
   setText(outputIds.isaFutureValue, formatCurrency(isaFuture));
+  setText(outputIds.savingsFutureValue, formatCurrency(savingsFuture));
   setText(outputIds.homeEquityValue, formatCurrency(homeEquityFuture));
   setText(outputIds.usableEquityValue, formatCurrency(usableHomeEquity));
 
   setWidth(outputIds.pensionShare, pensionShare);
   setWidth(outputIds.isaShare, isaShare);
+  setWidth(outputIds.savingsShare, savingsShare);
   setWidth(outputIds.homeShare, homeShare);
 
   setText(outputIds.pensionShareLabel, formatPercent(pensionShare));
   setText(outputIds.isaShareLabel, formatPercent(isaShare));
+  setText(outputIds.savingsShareLabel, formatPercent(savingsShare));
   setText(outputIds.homeShareLabel, formatPercent(homeShare));
 
   setText(outputIds.drawdownIncome, formatCurrency(drawdownIncome));
-  setText(outputIds.guaranteedIncomeOutput, formatCurrency(guaranteedIncome));
+  setText(outputIds.statePensionIncomeOutput, formatCurrency(statePensionIncome));
+  setText(outputIds.otherGuaranteedIncomeOutput, formatCurrency(otherGuaranteedIncome));
   setText(outputIds.totalIncomeOutput, formatCurrency(estimatedIncome));
 
   setText(
     outputIds.assumptionGrowth,
-    `Monthly compounding is used for pension growth at ${pensionReturn}% and ISA growth at ${isaReturn}%.`
+    `Monthly compounding is used for your pension, S&S ISA, and each extra account based on the yearly rates you enter.`
   );
   setText(
     outputIds.assumptionInflation,
@@ -217,10 +331,18 @@ function updatePlanner() {
   );
   setText(
     outputIds.assumptionEquity,
-    `${equityUsageRate}% of projected home equity is included in accessible retirement funding.`
+    `Home equity uses a ${mortgageRate}% mortgage rate with ${mortgageTermYears} years remaining, and ${equityUsageRate}% of projected equity is included in retirement funding.`
   );
   setText(outputIds.equityUsageLabel, `${equityUsageRate}%`);
 }
+
+createSavingsRow({ type: "cash_isa", balance: 20000, monthly: 150, rate: 3.5 });
+createSavingsRow({ type: "premium_bonds", balance: 10000, monthly: 50, rate: 4.0 });
+
+addSavingsAccountButton.addEventListener("click", () => {
+  createSavingsRow();
+  updatePlanner();
+});
 
 planner.addEventListener("input", updatePlanner);
 planner.addEventListener("change", updatePlanner);

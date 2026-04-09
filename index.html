@@ -77,7 +77,9 @@
           <h2>Retirement target</h2>
           <p class="section-copy">
             Start with the age you want to stop working and the amount you think you will need each
-            year in retirement, entered in today&apos;s money.
+            year in retirement, entered in today&apos;s money. Private pensions go in the section
+            below as investment pots. State or public pensions go here because they behave like
+            yearly income, not a pot you draw from.
           </p>
         </div>
         <div class="field-grid two-up">
@@ -102,8 +104,12 @@
             <input id="withdrawalRate" type="number" min="1" max="10" step="0.1" value="4">
           </label>
           <label class="field">
-            <span>Guaranteed yearly income in retirement</span>
-            <input id="guaranteedIncome" type="number" min="0" step="1000" value="12000">
+            <span>State or public pension income per year</span>
+            <input id="statePensionIncome" type="number" min="0" step="1000" value="12000">
+          </label>
+          <label class="field">
+            <span>Other guaranteed income per year</span>
+            <input id="otherGuaranteedIncome" type="number" min="0" step="1000" value="0">
           </label>
         </div>
       </section>
@@ -163,6 +169,28 @@
 
       <section class="panel-card">
         <div class="panel-heading">
+          <p class="panel-kicker">Other Accounts</p>
+          <h2>Cash ISA, Premium Bonds, HYSA, GIA and savings accounts</h2>
+          <p class="section-copy">
+            Add as many extra accounts as you want. Choose the account type from the dropdown, then
+            enter the current balance, monthly saving, and expected yearly rate.
+          </p>
+        </div>
+        <div class="savings-header">
+          <span>Account type</span>
+          <span>Current balance</span>
+          <span>Monthly saving</span>
+          <span>Yearly rate (%)</span>
+          <span></span>
+        </div>
+        <div class="savings-rows" id="savingsAccounts" aria-live="polite"></div>
+        <button class="secondary-button" id="addSavingsAccount" type="button">
+          Add another savings account
+        </button>
+      </section>
+
+      <section class="panel-card">
+        <div class="panel-heading">
           <p class="panel-kicker">Home</p>
           <h2>Property and home equity</h2>
           <p class="section-copy">
@@ -184,8 +212,12 @@
             <input id="mortgageBalance" type="number" min="0" step="1000" value="160000">
           </label>
           <label class="field">
-            <span>Mortgage balance paid off each month</span>
-            <input id="mortgageMonthlyReduction" type="number" min="0" step="50" value="650">
+            <span>Mortgage interest rate (%)</span>
+            <input id="mortgageRate" type="number" min="0" max="20" step="0.1" value="4.2">
+          </label>
+          <label class="field">
+            <span>Years left on mortgage</span>
+            <input id="mortgageTermYears" type="number" min="0" max="40" step="1" value="22">
           </label>
           <label class="field full-width range-field">
             <span>Home equity to use for retirement funding</span>
@@ -212,6 +244,10 @@
           <strong id="isa-future-value">&pound;0</strong>
         </div>
         <div class="results-row">
+          <span>Other accounts</span>
+          <strong id="savings-future-value">&pound;0</strong>
+        </div>
+        <div class="results-row">
           <span>Home equity</span>
           <strong id="home-equity-value">&pound;0</strong>
         </div>
@@ -228,8 +264,12 @@
           <strong id="drawdown-income">&pound;0</strong>
         </div>
         <div class="results-row">
-          <span>Guaranteed pension income</span>
-          <strong id="guaranteed-income-output">&pound;0</strong>
+          <span>State/public pension income</span>
+          <strong id="state-pension-income-output">&pound;0</strong>
+        </div>
+        <div class="results-row">
+          <span>Other guaranteed income</span>
+          <strong id="other-guaranteed-income-output">&pound;0</strong>
         </div>
         <div class="results-row emphasis">
           <span>Total yearly income available</span>
@@ -252,6 +292,13 @@
             <strong id="isa-share-label">0%</strong>
           </div>
           <div class="stack-bar"><span class="bar-fill isa-fill" id="isa-share"></span></div>
+        </div>
+        <div class="mix-group">
+          <div class="mix-label">
+            <span>Other accounts</span>
+            <strong id="savings-share-label">0%</strong>
+          </div>
+          <div class="stack-bar"><span class="bar-fill savings-fill" id="savings-share"></span></div>
         </div>
         <div class="mix-group">
           <div class="mix-label">
@@ -280,5 +327,33 @@
   </noscript>
 
   <script src="script.js"></script>
+
+  <template id="savingsAccountTemplate">
+    <div class="savings-row">
+      <label class="field">
+        <span class="sr-only">Account type</span>
+        <select class="savings-type">
+          <option value="cash_isa">Cash ISA</option>
+          <option value="premium_bonds">Premium Bonds</option>
+          <option value="hysa">High-yield savings</option>
+          <option value="gia">GIA</option>
+          <option value="savings_account">Savings account</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="sr-only">Current balance</span>
+        <input class="savings-balance" type="number" min="0" step="100" value="0">
+      </label>
+      <label class="field">
+        <span class="sr-only">Monthly saving</span>
+        <input class="savings-monthly" type="number" min="0" step="25" value="0">
+      </label>
+      <label class="field">
+        <span class="sr-only">Yearly rate</span>
+        <input class="savings-rate" type="number" min="0" max="15" step="0.1" value="0">
+      </label>
+      <button class="remove-button" type="button">Remove</button>
+    </div>
+  </template>
 </body>
 </html>
