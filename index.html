@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Can I Retire Yet?</title>
+  <meta
+    name="description"
+    content="Plan retirement in one place with integrated pension, S&S ISA, and home equity projections."
+  >
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-glow page-glow-left" aria-hidden="true"></div>
+  <div class="page-glow page-glow-right" aria-hidden="true"></div>
+
+  <header class="hero shell">
+    <div class="hero-copy reveal">
+      <p class="eyebrow">Can I Retire Yet?</p>
+      <h1>One website for the whole retirement picture.</h1>
+      <p class="hero-text">
+        Combine private pensions, S&amp;S ISA growth, and home equity into a single retirement
+        snapshot so you can see net worth, retirement income potential, and any funding gap in
+        one place.
+      </p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#planner">Build your plan</a>
+        <a class="button button-secondary" href="#results">See the snapshot</a>
+      </div>
+    </div>
+
+    <div class="hero-panel reveal">
+      <div class="hero-metric">
+        <span>Projection horizon</span>
+        <strong id="hero-years">18 years</strong>
+      </div>
+      <div class="hero-grid">
+        <article class="hero-card">
+          <span>Projected net worth</span>
+          <strong id="hero-net-worth">£0</strong>
+        </article>
+        <article class="hero-card">
+          <span>Estimated annual income</span>
+          <strong id="hero-income">£0</strong>
+        </article>
+        <article class="hero-card">
+          <span>Home equity at retirement</span>
+          <strong id="hero-equity">£0</strong>
+        </article>
+        <article class="hero-card">
+          <span>Annual target at retirement</span>
+          <strong id="hero-target">£0</strong>
+        </article>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="summary-strip reveal" aria-label="Retirement summary">
+      <article class="summary-card">
+        <span class="summary-label">Years to retirement</span>
+        <strong class="summary-value" id="years-to-retirement">0</strong>
+        <p class="summary-note">Based on your current and planned retirement age.</p>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Projected net worth</span>
+        <strong class="summary-value" id="projected-net-worth">£0</strong>
+        <p class="summary-note">Pension, ISA, and projected home equity combined.</p>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Estimated annual income</span>
+        <strong class="summary-value" id="estimated-income">£0</strong>
+        <p class="summary-note">Using your safe withdrawal rate and guaranteed pension income.</p>
+      </article>
+      <article class="summary-card">
+        <span class="summary-label">Retirement gap / surplus</span>
+        <strong class="summary-value" id="income-gap">£0</strong>
+        <p class="summary-note" id="income-gap-note">Compared with your future spending target.</p>
+      </article>
+    </section>
+
+    <section class="planner-grid">
+      <form class="planner reveal" id="planner" data-planner>
+        <article class="panel-card">
+          <div class="panel-heading">
+            <p class="panel-kicker">Life Plan</p>
+            <h2>Set the timeline and target</h2>
+          </div>
+          <div class="field-grid two-up">
+            <label class="field">
+              <span>Current age</span>
+              <input id="currentAge" type="number" min="18" max="90" step="1" value="42">
+            </label>
+            <label class="field">
+              <span>Retirement age</span>
+              <input id="retirementAge" type="number" min="40" max="90" step="1" value="60">
+            </label>
+            <label class="field">
+              <span>Target annual spending today</span>
+              <input id="targetSpending" type="number" min="0" step="1000" value="36000">
+            </label>
+            <label class="field">
+              <span>Inflation assumption (%)</span>
+              <input id="inflationRate" type="number" min="0" max="10" step="0.1" value="2.5">
+            </label>
+            <label class="field">
+              <span>Safe withdrawal rate (%)</span>
+              <input id="withdrawalRate" type="number" min="1" max="10" step="0.1" value="4">
+            </label>
+            <label class="field">
+              <span>Guaranteed annual pension income</span>
+              <input id="guaranteedIncome" type="number" min="0" step="1000" value="12000">
+            </label>
+          </div>
+        </article>
+
+        <article class="panel-card">
+          <div class="panel-heading">
+            <p class="panel-kicker">Pensions</p>
+            <h2>Project your private pension pot</h2>
+          </div>
+          <div class="field-grid two-up">
+            <label class="field">
+              <span>Current pension value</span>
+              <input id="pensionCurrent" type="number" min="0" step="1000" value="95000">
+            </label>
+            <label class="field">
+              <span>Expected annual return (%)</span>
+              <input id="pensionReturn" type="number" min="0" max="15" step="0.1" value="5">
+            </label>
+            <label class="field">
+              <span>Your monthly contribution</span>
+              <input id="pensionMonthlyEmployee" type="number" min="0" step="50" value="550">
+            </label>
+            <label class="field">
+              <span>Employer monthly contribution</span>
+              <input id="pensionMonthlyEmployer" type="number" min="0" step="50" value="350">
+            </label>
+          </div>
+        </article>
+
+        <article class="panel-card">
+          <div class="panel-heading">
+            <p class="panel-kicker">S&amp;S ISA</p>
+            <h2>Model tax-free compound growth</h2>
+          </div>
+          <div class="field-grid two-up">
+            <label class="field">
+              <span>Current ISA value</span>
+              <input id="isaCurrent" type="number" min="0" step="1000" value="40000">
+            </label>
+            <label class="field">
+              <span>Expected annual return (%)</span>
+              <input id="isaReturn" type="number" min="0" max="15" step="0.1" value="6">
+            </label>
+            <label class="field full-width">
+              <span>Monthly ISA contribution</span>
+              <input id="isaMonthly" type="number" min="0" step="50" value="500">
+            </label>
+          </div>
+        </article>
+
+        <article class="panel-card">
+          <div class="panel-heading">
+            <p class="panel-kicker">Home Equity</p>
+            <h2>Bring your property into the retirement view</h2>
+          </div>
+          <div class="field-grid two-up">
+            <label class="field">
+              <span>Current home value</span>
+              <input id="homeValue" type="number" min="0" step="5000" value="425000">
+            </label>
+            <label class="field">
+              <span>Expected annual home growth (%)</span>
+              <input id="homeGrowth" type="number" min="0" max="10" step="0.1" value="2.5">
+            </label>
+            <label class="field">
+              <span>Mortgage balance today</span>
+              <input id="mortgageBalance" type="number" min="0" step="1000" value="160000">
+            </label>
+            <label class="field">
+              <span>Monthly mortgage reduction</span>
+              <input id="mortgageMonthlyReduction" type="number" min="0" step="50" value="650">
+            </label>
+            <label class="field full-width range-field">
+              <span>Home equity to use for retirement funding</span>
+              <div class="range-wrap">
+                <input id="equityUsageRate" type="range" min="0" max="100" step="5" value="35">
+                <strong id="equity-usage-label">35%</strong>
+              </div>
+              <small>This could represent downsizing, equity release, or a planned property sale.</small>
+            </label>
+          </div>
+        </article>
+      </form>
+
+      <aside class="results reveal" id="results">
+        <article class="results-card spotlight">
+          <p class="panel-kicker">Retirement Snapshot</p>
+          <h2 id="readiness-title">On track with a projected surplus</h2>
+          <p class="spotlight-value" id="future-spending-target">£0</p>
+          <p class="spotlight-copy">
+            Estimated spending need at retirement in future pounds, after inflation.
+          </p>
+        </article>
+
+        <article class="results-card">
+          <div class="results-row">
+            <span>Pension pot at retirement</span>
+            <strong id="pension-future-value">£0</strong>
+          </div>
+          <div class="results-row">
+            <span>S&amp;S ISA at retirement</span>
+            <strong id="isa-future-value">£0</strong>
+          </div>
+          <div class="results-row">
+            <span>Home equity at retirement</span>
+            <strong id="home-equity-value">£0</strong>
+          </div>
+          <div class="results-row">
+            <span>Usable home equity</span>
+            <strong id="usable-equity-value">£0</strong>
+          </div>
+        </article>
+
+        <article class="results-card">
+          <h3>Net worth mix</h3>
+          <div class="stack-bars" aria-label="Net worth breakdown">
+            <div class="stack-bar pension-bar">
+              <span class="bar-fill" id="pension-share"></span>
+            </div>
+            <div class="stack-bar isa-bar">
+              <span class="bar-fill" id="isa-share"></span>
+            </div>
+            <div class="stack-bar home-bar">
+              <span class="bar-fill" id="home-share"></span>
+            </div>
+          </div>
+          <div class="mix-list">
+            <div class="mix-item">
+              <span>Pension</span>
+              <strong id="pension-share-label">0%</strong>
+            </div>
+            <div class="mix-item">
+              <span>S&amp;S ISA</span>
+              <strong id="isa-share-label">0%</strong>
+            </div>
+            <div class="mix-item">
+              <span>Home equity</span>
+              <strong id="home-share-label">0%</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="results-card">
+          <h3>Income build</h3>
+          <div class="results-row">
+            <span>Drawdown from accessible assets</span>
+            <strong id="drawdown-income">£0</strong>
+          </div>
+          <div class="results-row">
+            <span>Guaranteed pension income</span>
+            <strong id="guaranteed-income-output">£0</strong>
+          </div>
+          <div class="results-row emphasis">
+            <span>Total estimated annual income</span>
+            <strong id="total-income-output">£0</strong>
+          </div>
+        </article>
+
+        <article class="results-card assumptions">
+          <h3>Assumptions in use</h3>
+          <ul>
+            <li id="assumption-growth">Monthly compounding is used for pension and ISA growth.</li>
+            <li id="assumption-inflation">Target spending is inflated from today to retirement.</li>
+            <li id="assumption-equity">Only the chosen share of home equity is counted toward funding.</li>
+          </ul>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <noscript>
+    <div class="noscript-banner">
+      This planner needs JavaScript enabled to calculate pension, ISA, and home equity projections.
+    </div>
+  </noscript>
+
+  <script src="script.js"></script>
+</body>
+</html>
