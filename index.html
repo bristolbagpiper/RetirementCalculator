@@ -20,28 +20,27 @@
         projected net worth, retirement income, and any shortfall.
       </p>
     </div>
-
-    <aside class="hero-summary">
-      <p class="summary-kicker">At a glance</p>
-      <div class="hero-summary-row">
-        <span>Years to retirement</span>
-        <strong id="years-to-retirement">0</strong>
-      </div>
-      <div class="hero-summary-row">
-        <span>Projected net worth</span>
-        <strong id="projected-net-worth">&pound;0</strong>
-      </div>
-      <div class="hero-summary-row">
-        <span>Estimated annual income</span>
-        <strong id="estimated-income">&pound;0</strong>
-      </div>
-      <div class="hero-summary-row">
-        <span>Gap or surplus</span>
-        <strong id="income-gap">&pound;0</strong>
-      </div>
-      <p class="summary-note" id="income-gap-note">Compared with your inflation-adjusted target.</p>
-    </aside>
   </header>
+
+  <section class="overview shell" aria-label="Retirement overview">
+    <div class="overview-item">
+      <span>Years to retirement</span>
+      <strong id="years-to-retirement">0</strong>
+    </div>
+    <div class="overview-item">
+      <span>Projected net worth</span>
+      <strong id="projected-net-worth">&pound;0</strong>
+    </div>
+    <div class="overview-item">
+      <span>Estimated annual income</span>
+      <strong id="estimated-income">&pound;0</strong>
+    </div>
+    <div class="overview-item overview-item-wide">
+      <span>Gap or surplus</span>
+      <strong id="income-gap">&pound;0</strong>
+      <p class="summary-note" id="income-gap-note">Compared with your inflation-adjusted target.</p>
+    </div>
+  </section>
 
   <main class="shell layout">
     <form class="planner" id="planner" data-planner>
@@ -159,7 +158,7 @@
     </form>
 
     <aside class="results">
-      <section class="results-card lead-card">
+      <section class="results-card results-intro">
         <p class="panel-kicker">Snapshot</p>
         <h2 id="readiness-title">On track with a projected surplus</h2>
         <div class="lead-metric">
