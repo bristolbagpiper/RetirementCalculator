@@ -144,6 +144,20 @@ function futureValueWithMonthlyContributions(initial, monthlyContribution, annua
   return initial * growthFactor + contributionValue;
 }
 
+function futureValueWithMonthlyContributionsSchedule(initial, monthlyContribution, years, annualRateAtMonth) {
+  const safeYears = Math.max(0, years);
+  const months = Math.round(safeYears * 12);
+  let balance = initial;
+
+  for (let month = 0; month < months; month += 1) {
+    const annualRate = annualRateAtMonth(month);
+    const monthlyRate = annualRate / 100 / 12;
+    balance = balance * (1 + monthlyRate) + monthlyContribution;
+  }
+
+  return balance;
+}
+
 function futureValueLumpSum(initial, annualRate, years) {
   return initial * Math.pow(1 + annualRate / 100, Math.max(0, years));
 }
@@ -185,6 +199,20 @@ function formatCurrency(value) {
 
 function formatPercent(value) {
   return `${Math.round(value)}%`;
+}
+
+function formatCurrencyShortLabel(value) {
+  const absolute = Math.abs(value);
+
+  if (absolute >= 1000000) {
+    return `£${(value / 1000000).toFixed(1)}m`;
+  }
+
+  if (absolute >= 1000) {
+    return `£${Math.round(value / 1000)}k`;
+  }
+
+  return formatCurrency(value);
 }
 
 function formatCurrencyShort(value) {
@@ -277,6 +305,84 @@ function calculateSavingsFutureValue(yearsToRetirement) {
   }, 0);
 }
 
+function clampPercentage(value) {
+  return Math.max(0, Math.min(100, value));
+}
+
+function blendedReturn(growthReturn, defensiveReturn, equityAllocation) {
+  const equityShare = clampPercentage(equityAllocation) / 100;
+  return growthReturn * equityShare + defensiveReturn * (1 - equityShare);
+}
+
+function getEquityAllocationPreRetirement(yearsRemaining, inputs) {
+  const currentEquity = clampPercentage(inputs.equityAllocationNow);
+  const retirementEquity = clampPercentage(inputs.equityAllocationRetirement);
+  const deriskingStartYears = Math.max(0, inputs.deriskingStartYears);
+
+  if (deriskingStartYears === 0) {
+    return retirementEquity;
+  }
+
+  if (yearsRemaining >= deriskingStartYears) {
+    return currentEquity;
+  }
+
+  const progress = (deriskingStartYears - yearsRemaining) / deriskingStartYears;
+  return currentEquity + (retirementEquity - currentEquity) * progress;
+}
+
+function getPreRetirementBlendedRate(growthReturn, monthIndex, totalYearsToRetirement, inputs) {
+  const yearsElapsed = monthIndex / 12;
+  const yearsRemaining = Math.max(0, totalYearsToRetirement - yearsElapsed);
+  const equityAllocation = getEquityAllocationPreRetirement(yearsRemaining, inputs);
+  return blendedReturn(growthReturn, inputs.defensiveReturn, equityAllocation);
+}
+
+function getDrawdownBlendedRate(growthReturn, inputs) {
+  return blendedReturn(growthReturn, inputs.defensiveReturn, inputs.equityAllocationDrawdown);
+}
+
+function isGlidePathSavingsType(type) {
+  return type === "gia";
+}
+
+function calculateSavingsProjection(yearsToRetirement, inputs) {
+  let total = 0;
+  let drawdownWeightedRate = 0;
+  let weightTotal = 0;
+
+  getSavingsRows().forEach((row) => {
+    const type = row.querySelector(".savings-type")?.value || "savings_account";
+    const balance = Number(row.querySelector(".savings-balance")?.value) || 0;
+    const monthly = Number(row.querySelector(".savings-monthly")?.value) || 0;
+    const rate = Number(row.querySelector(".savings-rate")?.value) || 0;
+
+    let futureValue = 0;
+    let postRetirementRate = rate;
+
+    if (isGlidePathSavingsType(type)) {
+      futureValue = futureValueWithMonthlyContributionsSchedule(
+        balance,
+        monthly,
+        yearsToRetirement,
+        (month) => getPreRetirementBlendedRate(rate, month, yearsToRetirement, inputs)
+      );
+      postRetirementRate = getDrawdownBlendedRate(rate, inputs);
+    } else {
+      futureValue = futureValueWithMonthlyContributions(balance, monthly, rate, yearsToRetirement);
+    }
+
+    total += futureValue;
+    drawdownWeightedRate += futureValue * postRetirementRate;
+    weightTotal += futureValue;
+  });
+
+  return {
+    total,
+    drawdownRate: weightTotal > 0 ? drawdownWeightedRate / weightTotal : 0,
+  };
+}
+
 function getSavingsMonthlyContribution() {
   return getSavingsRows().reduce((total, row) => {
     const monthly = Number(row.querySelector(".savings-monthly")?.value) || 0;
@@ -342,23 +448,24 @@ function syncOptionalUi() {
 }
 
 function calculateProjection(inputs, yearsToRetirement) {
-  const pensionFuture = futureValueWithMonthlyContributions(
+  const pensionFuture = futureValueWithMonthlyContributionsSchedule(
     inputs.pensionCurrent,
     inputs.pensionMonthlyTotal,
-    inputs.pensionReturn,
-    yearsToRetirement
+    yearsToRetirement,
+    (month) => getPreRetirementBlendedRate(inputs.pensionReturn, month, yearsToRetirement, inputs)
   );
 
-  const isaFuture = futureValueWithMonthlyContributions(
+  const isaFuture = futureValueWithMonthlyContributionsSchedule(
     inputs.isaCurrent,
     inputs.isaMonthly,
-    inputs.isaReturn,
-    yearsToRetirement
+    yearsToRetirement,
+    (month) => getPreRetirementBlendedRate(inputs.isaReturn, month, yearsToRetirement, inputs)
   );
 
-  const savingsFuture = inputs.includeOtherAccounts
-    ? calculateSavingsFutureValue(yearsToRetirement)
-    : 0;
+  const savingsProjection = inputs.includeOtherAccounts
+    ? calculateSavingsProjection(yearsToRetirement, inputs)
+    : { total: 0, drawdownRate: 0 };
+  const savingsFuture = savingsProjection.total;
   const homeValueFuture = futureValueLumpSum(inputs.homeValue, inputs.homeGrowth, yearsToRetirement);
   const projectedMortgageBalance = calculateMortgageBalanceAtRetirement(
     inputs.mortgageBalance,
@@ -388,6 +495,9 @@ function calculateProjection(inputs, yearsToRetirement) {
     drawdownIncome,
     estimatedIncome,
     incomeGap,
+    pensionDrawdownRate: getDrawdownBlendedRate(inputs.pensionReturn, inputs),
+    isaDrawdownRate: getDrawdownBlendedRate(inputs.isaReturn, inputs),
+    savingsDrawdownRate: savingsProjection.drawdownRate,
   };
 }
 
@@ -491,7 +601,6 @@ function buildContributionChartData(inputs, currentAge, yearsToRetirement) {
 
 function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement) {
   const maxYears = 25;
-  const savingsRate = inputs.includeOtherAccounts ? getSavingsAverageRate() : 0;
   const withdrawalBase =
     (retirementProjection.pensionFuture +
       retirementProjection.isaFuture +
@@ -529,9 +638,9 @@ function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement)
     savingsBalance -= plannedWithdrawal * (savingsBalance / totalBeforeWithdrawal);
     homeCashBalance -= plannedWithdrawal * (homeCashBalance / totalBeforeWithdrawal);
 
-    pensionBalance = Math.max(0, pensionBalance * (1 + inputs.pensionReturn / 100));
-    isaBalance = Math.max(0, isaBalance * (1 + inputs.isaReturn / 100));
-    savingsBalance = Math.max(0, savingsBalance * (1 + savingsRate / 100));
+    pensionBalance = Math.max(0, pensionBalance * (1 + retirementProjection.pensionDrawdownRate / 100));
+    isaBalance = Math.max(0, isaBalance * (1 + retirementProjection.isaDrawdownRate / 100));
+    savingsBalance = Math.max(0, savingsBalance * (1 + retirementProjection.savingsDrawdownRate / 100));
     homeCashBalance = Math.max(0, homeCashBalance);
   }
 
@@ -608,7 +717,7 @@ function buildSvgChartMarkup(model) {
     const value = (maxTotal / yTicks) * tick;
     const y = margin.top + chartHeight - (value / maxTotal) * chartHeight;
     svg += `<line class="chart-gridline" x1="${margin.left}" y1="${y}" x2="${width - margin.right}" y2="${y}"></line>`;
-    svg += `<text class="chart-ylabel" x="${margin.left - 10}" y="${y + 4}" text-anchor="end">${formatCurrencyShort(
+    svg += `<text class="chart-ylabel" x="${margin.left - 10}" y="${y + 4}" text-anchor="end">${formatCurrencyShortLabel(
       value
     )}</text>`;
   }
@@ -684,6 +793,11 @@ function updatePlanner() {
   const targetSpending = readNumber("targetSpending");
   const inflationRate = readNumber("inflationRate");
   const withdrawalRate = readNumber("withdrawalRate");
+  const equityAllocationNow = readNumber("equityAllocationNow");
+  const equityAllocationRetirement = readNumber("equityAllocationRetirement");
+  const equityAllocationDrawdown = readNumber("equityAllocationDrawdown");
+  const deriskingStartYears = readNumber("deriskingStartYears");
+  const defensiveReturn = readNumber("defensiveReturn");
   const includeStatePension = isChecked("includeStatePension");
   const includeOtherGuaranteedIncome = isChecked("includeOtherGuaranteedIncome");
   const includePension = isChecked("includePension");
@@ -717,6 +831,11 @@ function updatePlanner() {
     targetSpending,
     inflationRate,
     withdrawalRate,
+    equityAllocationNow,
+    equityAllocationRetirement,
+    equityAllocationDrawdown,
+    deriskingStartYears,
+    defensiveReturn,
     guaranteedIncome,
     pensionCurrent,
     pensionReturn,
@@ -859,7 +978,9 @@ function updatePlanner() {
 
   setText(
     outputIds.assumptionGrowth,
-    `Monthly compounding is used for each section you leave turned on, based on the yearly rates you enter.`
+    `Invested assets use a glide path from ${clampPercentage(equityAllocationNow)}% equity today to ${clampPercentage(
+      equityAllocationRetirement
+    )}% at retirement, then ${clampPercentage(equityAllocationDrawdown)}% in drawdown, with ${defensiveReturn}% for lower-risk assets.`
   );
   setText(
     outputIds.assumptionInflation,

@@ -24,7 +24,7 @@
 
   <main class="shell layout">
     <form class="planner" id="planner" data-planner>
-      <section class="panel-card">
+      <section class="panel-card panel-card-wide panel-card-aside">
         <div class="panel-heading">
           <p class="panel-kicker">Basics</p>
           <h2>Retirement target</h2>
@@ -35,7 +35,7 @@
             yearly income, not a pot you draw from.
           </p>
         </div>
-        <div class="field-grid two-up">
+        <div class="field-grid three-up">
           <label class="field">
             <span>Current age</span>
             <input id="currentAge" type="number" min="18" max="90" step="1" value="42">
@@ -52,7 +52,7 @@
             <span>Inflation assumption (%)</span>
             <input id="inflationRate" type="number" min="0" max="10" step="0.1" value="2.5">
           </label>
-          <label class="field">
+          <label class="field full-width">
             <span>Withdrawal rate used for investments (%)</span>
             <input id="withdrawalRate" type="number" min="1" max="10" step="0.1" value="4">
             <div class="field-help withdrawal-help">
@@ -89,7 +89,45 @@
         </div>
       </section>
 
-      <section class="panel-card" id="pensionSection">
+      <section class="panel-card panel-card-half panel-card-aside">
+        <div class="panel-heading">
+          <p class="panel-kicker">Asset Mix</p>
+          <h2>Derisking and rebalance glide path</h2>
+          <p class="section-copy">
+            This lets the planner gradually move invested assets away from an equity-heavy mix as
+            retirement gets closer. It applies to your private pension, S&amp;S ISA, and any GIA
+            rows in other accounts. Cash-style accounts keep the rates you enter directly.
+          </p>
+          <p class="section-copy">
+            Your pension, S&amp;S ISA, and GIA return fields are treated as the higher-risk growth
+            return. The lower-risk return below is used for the defensive part of the portfolio.
+          </p>
+        </div>
+        <div class="field-grid two-up">
+          <label class="field">
+            <span>Equity allocation today (%)</span>
+            <input id="equityAllocationNow" type="number" min="0" max="100" step="1" value="85">
+          </label>
+          <label class="field">
+            <span>Equity allocation at retirement (%)</span>
+            <input id="equityAllocationRetirement" type="number" min="0" max="100" step="1" value="55">
+          </label>
+          <label class="field">
+            <span>Equity allocation during drawdown (%)</span>
+            <input id="equityAllocationDrawdown" type="number" min="0" max="100" step="1" value="40">
+          </label>
+          <label class="field">
+            <span>Years before retirement to start derisking</span>
+            <input id="deriskingStartYears" type="number" min="0" max="30" step="1" value="10">
+          </label>
+          <label class="field full-width">
+            <span>Lower-risk assets return (%)</span>
+            <input id="defensiveReturn" type="number" min="0" max="10" step="0.1" value="2.5">
+          </label>
+        </div>
+      </section>
+
+      <section class="panel-card panel-card-half panel-card-aside" id="pensionSection">
         <div class="panel-heading">
           <div class="panel-heading-top">
             <div>
@@ -125,7 +163,7 @@
         </div>
       </section>
 
-      <section class="panel-card" id="isaSection">
+      <section class="panel-card panel-card-half panel-card-aside" id="isaSection">
         <div class="panel-heading">
           <div class="panel-heading-top">
             <div>
@@ -142,7 +180,7 @@
             could hold by retirement.
           </p>
         </div>
-        <div class="field-grid two-up">
+        <div class="field-grid three-up">
           <label class="field">
             <span>Current ISA value</span>
             <input id="isaCurrent" type="number" min="0" step="1000" value="40000">
@@ -151,14 +189,14 @@
             <span>Expected annual return (%)</span>
             <input id="isaReturn" type="number" min="0" max="15" step="0.1" value="6">
           </label>
-          <label class="field full-width">
+          <label class="field">
             <span>Monthly ISA contribution</span>
             <input id="isaMonthly" type="number" min="0" step="50" value="500">
           </label>
         </div>
       </section>
 
-      <section class="panel-card" id="otherAccountsSection">
+      <section class="panel-card panel-card-wide" id="otherAccountsSection">
         <div class="panel-heading">
           <div class="panel-heading-top">
             <div>
@@ -188,7 +226,7 @@
         </button>
       </section>
 
-      <section class="panel-card" id="homeSection">
+      <section class="panel-card panel-card-half panel-card-aside" id="homeSection">
         <div class="panel-heading">
           <div class="panel-heading-top">
             <div>
@@ -205,7 +243,7 @@
             downsizing, or releasing equity.
           </p>
         </div>
-        <div class="field-grid two-up">
+        <div class="field-grid three-up">
           <label class="field">
             <span>Current home value</span>
             <input id="homeValue" type="number" min="0" step="5000" value="425000">
@@ -293,82 +331,84 @@
         </div>
       </section>
 
-      <section class="results-card">
-        <p class="panel-kicker">How This Was Calculated</p>
-        <h3>Projected balances at retirement</h3>
-        <div class="results-row">
-          <span>Pension pot</span>
-          <strong id="pension-future-value">&pound;0</strong>
-        </div>
-        <div class="results-row">
-          <span>S&amp;S ISA</span>
-          <strong id="isa-future-value">&pound;0</strong>
-        </div>
-        <div class="results-row">
-          <span>Other accounts</span>
-          <strong id="savings-future-value">&pound;0</strong>
-        </div>
-        <div class="results-row">
-          <span>Home equity</span>
-          <strong id="home-equity-value">&pound;0</strong>
-        </div>
-        <div class="results-row">
-          <span>Usable home equity</span>
-          <strong id="usable-equity-value">&pound;0</strong>
-        </div>
-      </section>
-
-      <section class="results-card">
-        <h3>Income estimate</h3>
-        <div class="results-row">
-          <span>Drawdown from assets</span>
-          <strong id="drawdown-income">&pound;0</strong>
-        </div>
-        <div class="results-row">
-          <span>State/public pension income</span>
-          <strong id="state-pension-income-output">&pound;0</strong>
-        </div>
-        <div class="results-row">
-          <span>Other guaranteed income</span>
-          <strong id="other-guaranteed-income-output">&pound;0</strong>
-        </div>
-        <div class="results-row emphasis">
-          <span>Total yearly income available</span>
-          <strong id="total-income-output">&pound;0</strong>
-        </div>
-      </section>
-
-      <section class="results-card">
-        <h3>Net worth mix</h3>
-        <div class="mix-group">
-          <div class="mix-label">
-            <span>Pension</span>
-            <strong id="pension-share-label">0%</strong>
+      <div class="results-detail-grid">
+        <section class="results-card">
+          <p class="panel-kicker">How This Was Calculated</p>
+          <h3>Projected balances at retirement</h3>
+          <div class="results-row">
+            <span>Pension pot</span>
+            <strong id="pension-future-value">&pound;0</strong>
           </div>
-          <div class="stack-bar"><span class="bar-fill pension-fill" id="pension-share"></span></div>
-        </div>
-        <div class="mix-group">
-          <div class="mix-label">
+          <div class="results-row">
             <span>S&amp;S ISA</span>
-            <strong id="isa-share-label">0%</strong>
+            <strong id="isa-future-value">&pound;0</strong>
           </div>
-          <div class="stack-bar"><span class="bar-fill isa-fill" id="isa-share"></span></div>
-        </div>
-        <div class="mix-group">
-          <div class="mix-label">
+          <div class="results-row">
             <span>Other accounts</span>
-            <strong id="savings-share-label">0%</strong>
+            <strong id="savings-future-value">&pound;0</strong>
           </div>
-          <div class="stack-bar"><span class="bar-fill savings-fill" id="savings-share"></span></div>
-        </div>
-        <div class="mix-group">
-          <div class="mix-label">
+          <div class="results-row">
             <span>Home equity</span>
-            <strong id="home-share-label">0%</strong>
+            <strong id="home-equity-value">&pound;0</strong>
           </div>
-          <div class="stack-bar"><span class="bar-fill home-fill" id="home-share"></span></div>
-        </div>
-      </section>
+          <div class="results-row">
+            <span>Usable home equity</span>
+            <strong id="usable-equity-value">&pound;0</strong>
+          </div>
+        </section>
+
+        <section class="results-card">
+          <h3>Income estimate</h3>
+          <div class="results-row">
+            <span>Drawdown from assets</span>
+            <strong id="drawdown-income">&pound;0</strong>
+          </div>
+          <div class="results-row">
+            <span>State/public pension income</span>
+            <strong id="state-pension-income-output">&pound;0</strong>
+          </div>
+          <div class="results-row">
+            <span>Other guaranteed income</span>
+            <strong id="other-guaranteed-income-output">&pound;0</strong>
+          </div>
+          <div class="results-row emphasis">
+            <span>Total yearly income available</span>
+            <strong id="total-income-output">&pound;0</strong>
+          </div>
+        </section>
+
+        <section class="results-card">
+          <h3>Net worth mix</h3>
+          <div class="mix-group">
+            <div class="mix-label">
+              <span>Pension</span>
+              <strong id="pension-share-label">0%</strong>
+            </div>
+            <div class="stack-bar"><span class="bar-fill pension-fill" id="pension-share"></span></div>
+          </div>
+          <div class="mix-group">
+            <div class="mix-label">
+              <span>S&amp;S ISA</span>
+              <strong id="isa-share-label">0%</strong>
+            </div>
+            <div class="stack-bar"><span class="bar-fill isa-fill" id="isa-share"></span></div>
+          </div>
+          <div class="mix-group">
+            <div class="mix-label">
+              <span>Other accounts</span>
+              <strong id="savings-share-label">0%</strong>
+            </div>
+            <div class="stack-bar"><span class="bar-fill savings-fill" id="savings-share"></span></div>
+          </div>
+          <div class="mix-group">
+            <div class="mix-label">
+              <span>Home equity</span>
+              <strong id="home-share-label">0%</strong>
+            </div>
+            <div class="stack-bar"><span class="bar-fill home-fill" id="home-share"></span></div>
+          </div>
+        </section>
+      </div>
 
       <section class="results-card charts-card">
         <div class="charts-header">
