@@ -128,6 +128,66 @@ li {
   margin-top: 0.4rem;
 }
 
+.answer {
+  padding: 1.6rem 0 1rem;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.answer-heading {
+  max-width: 60rem;
+}
+
+.answer-heading h2 {
+  margin-top: 0.35rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.08;
+}
+
+.answer-copy {
+  margin-top: 0.75rem;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.answer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.35rem;
+}
+
+.answer-item {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.answer-item span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.answer-item strong {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1.05;
+}
+
+.answer-item p {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 0.94rem;
+}
+
+.answer-item-strong strong {
+  color: var(--accent);
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
@@ -154,6 +214,14 @@ li {
 .panel-heading h2 {
   margin-top: 0.25rem;
   font-size: 1.55rem;
+}
+
+.section-copy {
+  margin-top: 0.55rem;
+  max-width: 60ch;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 0.97rem;
 }
 
 .field-grid {
@@ -219,33 +287,9 @@ input[type="range"] {
   align-self: start;
 }
 
-.results-intro {
-  padding-top: 0;
-  border-top: none;
-}
-
 .results-card h3 {
   margin-bottom: 0.8rem;
   font-size: 1.25rem;
-}
-
-.results-intro h2 {
-  margin-top: 0.35rem;
-  font-size: 1.8rem;
-  line-height: 1.2;
-}
-
-.lead-metric {
-  margin-top: 1.15rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-}
-
-.lead-metric strong {
-  display: block;
-  margin-top: 0.35rem;
-  font-size: clamp(2rem, 5vw, 2.8rem);
-  line-height: 1;
 }
 
 .results-row {
@@ -323,6 +367,7 @@ input[type="range"] {
 }
 
 @media (max-width: 980px) {
+  .answer-grid,
   .overview,
   .layout {
     grid-template-columns: 1fr;
@@ -345,6 +390,10 @@ input[type="range"] {
   .overview {
     gap: 1rem;
     padding-top: 1rem;
+  }
+
+  .answer {
+    padding-top: 1.2rem;
   }
 
   .two-up {

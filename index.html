@@ -36,9 +36,36 @@
       <strong id="estimated-income">&pound;0</strong>
     </div>
     <div class="overview-item overview-item-wide">
-      <span>Gap or surplus</span>
+      <span id="income-gap-label">Expected shortfall</span>
       <strong id="income-gap">&pound;0</strong>
-      <p class="summary-note" id="income-gap-note">Compared with your inflation-adjusted target.</p>
+      <p class="summary-note" id="income-gap-note">Compared with your inflation-adjusted spending target.</p>
+    </div>
+  </section>
+
+  <section class="answer shell" aria-labelledby="readiness-title">
+    <div class="answer-heading">
+      <p class="panel-kicker">Your result</p>
+      <h2 id="readiness-title">There is a projected retirement income gap</h2>
+      <p class="answer-copy" id="result-explainer">
+        At your planned retirement age, your projected yearly income is below what you want to spend.
+      </p>
+    </div>
+    <div class="answer-grid">
+      <div class="answer-item">
+        <span>You want to spend each year in retirement</span>
+        <strong id="future-spending-target">&pound;0</strong>
+        <p>Shown in future pounds after inflation.</p>
+      </div>
+      <div class="answer-item">
+        <span>You could generate each year</span>
+        <strong id="answer-income-output">&pound;0</strong>
+        <p>From your pension income, investments, and chosen home equity.</p>
+      </div>
+      <div class="answer-item answer-item-strong">
+        <span id="answer-difference-label">Expected shortfall</span>
+        <strong id="answer-difference">&pound;0</strong>
+        <p id="answer-difference-note">This is the yearly gap between spending and income.</p>
+      </div>
     </div>
   </section>
 
@@ -48,6 +75,10 @@
         <div class="panel-heading">
           <p class="panel-kicker">Basics</p>
           <h2>Retirement target</h2>
+          <p class="section-copy">
+            Start with the age you want to stop working and the amount you think you will need each
+            year in retirement, entered in today&apos;s money.
+          </p>
         </div>
         <div class="field-grid two-up">
           <label class="field">
@@ -59,7 +90,7 @@
             <input id="retirementAge" type="number" min="40" max="90" step="1" value="60">
           </label>
           <label class="field">
-            <span>Target annual spending today</span>
+            <span>Yearly spending you want in retirement (today&apos;s money)</span>
             <input id="targetSpending" type="number" min="0" step="1000" value="36000">
           </label>
           <label class="field">
@@ -67,11 +98,11 @@
             <input id="inflationRate" type="number" min="0" max="10" step="0.1" value="2.5">
           </label>
           <label class="field">
-            <span>Safe withdrawal rate (%)</span>
+            <span>Withdrawal rate used for investments (%)</span>
             <input id="withdrawalRate" type="number" min="1" max="10" step="0.1" value="4">
           </label>
           <label class="field">
-            <span>Guaranteed annual pension income</span>
+            <span>Guaranteed yearly income in retirement</span>
             <input id="guaranteedIncome" type="number" min="0" step="1000" value="12000">
           </label>
         </div>
@@ -81,6 +112,9 @@
         <div class="panel-heading">
           <p class="panel-kicker">Pension</p>
           <h2>Private pension projection</h2>
+          <p class="section-copy">
+            This projects the future value of your pension pot using contributions plus compound growth.
+          </p>
         </div>
         <div class="field-grid two-up">
           <label class="field">
@@ -106,6 +140,10 @@
         <div class="panel-heading">
           <p class="panel-kicker">S&amp;S ISA</p>
           <h2>ISA compound growth</h2>
+          <p class="section-copy">
+            Add your current ISA and monthly investing amount to estimate how much tax-free money it
+            could hold by retirement.
+          </p>
         </div>
         <div class="field-grid two-up">
           <label class="field">
@@ -127,6 +165,10 @@
         <div class="panel-heading">
           <p class="panel-kicker">Home</p>
           <h2>Property and home equity</h2>
+          <p class="section-copy">
+            Use this section only if you expect your home to contribute to retirement through selling,
+            downsizing, or releasing equity.
+          </p>
         </div>
         <div class="field-grid two-up">
           <label class="field">
@@ -134,7 +176,7 @@
             <input id="homeValue" type="number" min="0" step="5000" value="425000">
           </label>
           <label class="field">
-            <span>Expected annual home growth (%)</span>
+            <span>Home value growth per year (%)</span>
             <input id="homeGrowth" type="number" min="0" max="10" step="0.1" value="2.5">
           </label>
           <label class="field">
@@ -142,7 +184,7 @@
             <input id="mortgageBalance" type="number" min="0" step="1000" value="160000">
           </label>
           <label class="field">
-            <span>Monthly mortgage reduction</span>
+            <span>Mortgage balance paid off each month</span>
             <input id="mortgageMonthlyReduction" type="number" min="0" step="50" value="650">
           </label>
           <label class="field full-width range-field">
@@ -158,16 +200,8 @@
     </form>
 
     <aside class="results">
-      <section class="results-card results-intro">
-        <p class="panel-kicker">Snapshot</p>
-        <h2 id="readiness-title">On track with a projected surplus</h2>
-        <div class="lead-metric">
-          <span>Inflation-adjusted annual spending target</span>
-          <strong id="future-spending-target">&pound;0</strong>
-        </div>
-      </section>
-
       <section class="results-card">
+        <p class="panel-kicker">How This Was Calculated</p>
         <h3>Projected balances at retirement</h3>
         <div class="results-row">
           <span>Pension pot</span>
@@ -198,7 +232,7 @@
           <strong id="guaranteed-income-output">&pound;0</strong>
         </div>
         <div class="results-row emphasis">
-          <span>Total estimated annual income</span>
+          <span>Total yearly income available</span>
           <strong id="total-income-output">&pound;0</strong>
         </div>
       </section>

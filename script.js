@@ -14,10 +14,16 @@ const outputIds = {
   yearsToRetirement: "years-to-retirement",
   projectedNetWorth: "projected-net-worth",
   estimatedIncome: "estimated-income",
+  incomeGapLabel: "income-gap-label",
   incomeGap: "income-gap",
   incomeGapNote: "income-gap-note",
   readinessTitle: "readiness-title",
+  resultExplainer: "result-explainer",
   futureSpendingTarget: "future-spending-target",
+  answerIncomeOutput: "answer-income-output",
+  answerDifferenceLabel: "answer-difference-label",
+  answerDifference: "answer-difference",
+  answerDifferenceNote: "answer-difference-note",
   pensionFutureValue: "pension-future-value",
   isaFutureValue: "isa-future-value",
   homeEquityValue: "home-equity-value",
@@ -151,24 +157,38 @@ function updatePlanner() {
     incomeGap >= 0
       ? "On track with a projected surplus"
       : "There is a projected retirement income gap";
-  const gapLabel =
-    incomeGap >= 0
-      ? `Projected annual surplus of ${formatCurrency(Math.abs(incomeGap))}`
-      : `Projected annual gap of ${formatCurrency(Math.abs(incomeGap))}`;
+  const gapLabel = incomeGap >= 0 ? "Expected surplus" : "Expected shortfall";
+  const gapValue = formatCurrency(Math.abs(incomeGap));
 
   setText(outputIds.yearsToRetirement, numberFormatter.format(yearsToRetirement));
   setText(outputIds.projectedNetWorth, formatCurrency(projectedNetWorth));
   setText(outputIds.estimatedIncome, formatCurrency(estimatedIncome));
-  setText(outputIds.incomeGap, gapLabel);
+  setText(outputIds.incomeGapLabel, gapLabel);
+  setText(outputIds.incomeGap, gapValue);
   setText(
     outputIds.incomeGapNote,
     incomeGap >= 0
-      ? "Your estimated income is above your inflation-adjusted target."
-      : "Your estimated income is below your inflation-adjusted target."
+      ? "Your projected yearly income is above your target."
+      : "Your projected yearly income is below your target."
   );
 
   setText(outputIds.readinessTitle, readinessTitle);
+  setText(
+    outputIds.resultExplainer,
+    incomeGap >= 0
+      ? "At your planned retirement age, your projected yearly income is higher than the amount you want to spend."
+      : "At your planned retirement age, your projected yearly income is lower than the amount you want to spend."
+  );
   setText(outputIds.futureSpendingTarget, formatCurrency(futureSpendingTarget));
+  setText(outputIds.answerIncomeOutput, formatCurrency(estimatedIncome));
+  setText(outputIds.answerDifferenceLabel, gapLabel);
+  setText(outputIds.answerDifference, gapValue);
+  setText(
+    outputIds.answerDifferenceNote,
+    incomeGap >= 0
+      ? "This is the extra yearly income above your target."
+      : "This is the extra yearly income you would still need."
+  );
 
   setText(outputIds.pensionFutureValue, formatCurrency(pensionFuture));
   setText(outputIds.isaFutureValue, formatCurrency(isaFuture));
