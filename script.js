@@ -71,6 +71,9 @@ const outputIds = {
   answerDifferenceLabel: "answer-difference-label",
   answerDifference: "answer-difference",
   answerDifferenceNote: "answer-difference-note",
+  laterIncomeCallout: "later-income-callout",
+  laterIncomeTitle: "later-income-title",
+  laterIncomeCopy: "later-income-copy",
   incomeFormulaNote: "income-formula-note",
   laterIncomeNote: "later-income-note",
   extraYearsTitle: "extra-years-title",
@@ -139,6 +142,13 @@ function setWidth(id, value) {
   const node = document.getElementById(id);
   if (node) {
     node.style.width = `${Math.max(0, Math.min(100, value))}%`;
+  }
+}
+
+function setHidden(id, hidden) {
+  const node = document.getElementById(id);
+  if (node) {
+    node.hidden = hidden;
   }
 }
 
@@ -554,12 +564,16 @@ function calculateIncomeAtAge(inputs, retirementProjection, targetAge) {
   const guaranteedBenefits = getGuaranteedBenefits(inputs, Math.max(0, targetAge - inputs.currentAge));
   const drawdownIncome = balances.accessibleAssets * (inputs.withdrawalRate / 100);
   const estimatedIncome = drawdownIncome + guaranteedBenefits.guaranteedIncomeTotal;
+  const futureSpendingTarget =
+    inputs.targetSpending * Math.pow(1 + inputs.inflationRate / 100, Math.max(0, targetAge - inputs.currentAge));
 
   return {
     drawdownIncome,
     estimatedIncome,
     accessibleAssets: balances.accessibleAssets,
     guaranteedIncomeTotal: guaranteedBenefits.guaranteedIncomeTotal,
+    futureSpendingTarget,
+    incomeGap: estimatedIncome - futureSpendingTarget,
   };
 }
 
@@ -1077,7 +1091,7 @@ function updatePlanner() {
   const readinessTitle =
     incomeGap >= 0
       ? "On track with a projected surplus"
-      : "There is a projected retirement income gap";
+      : `There is a projected retirement income gap at age ${retirementAge}`;
   const gapLabel = incomeGap >= 0 ? "Expected surplus" : "Expected shortfall";
   const gapValue = formatCurrency(Math.abs(incomeGap));
 
@@ -1094,12 +1108,10 @@ function updatePlanner() {
   );
 
   setText(outputIds.readinessTitle, readinessTitle);
-  setText(
-    outputIds.resultExplainer,
+  let resultExplainer =
     incomeGap >= 0
       ? "At your planned retirement age, your projected yearly income is higher than the amount you want to spend."
-      : "At your planned retirement age, your projected yearly income is lower than the amount you want to spend."
-  );
+      : "At your planned retirement age, your projected yearly income is lower than the amount you want to spend.";
   setText(outputIds.futureSpendingTarget, formatCurrency(futureSpendingTarget));
   setText(outputIds.answerIncomeOutput, formatCurrency(estimatedIncome));
   setText(outputIds.answerDifferenceLabel, gapLabel);
@@ -1118,9 +1130,32 @@ function updatePlanner() {
   );
 
   const nextDelayedIncome = getNextDelayedIncomeStart(inputs);
+  const laterIncomeCallout = document.getElementById(outputIds.laterIncomeCallout);
   if (nextDelayedIncome) {
     const laterIncome = calculateIncomeAtAge(inputs, projection, nextDelayedIncome.age);
     const sourceList = nextDelayedIncome.labels.join(" and ");
+    const laterGap = laterIncome.incomeGap;
+
+    if (incomeGap < 0 && laterGap >= 0) {
+      resultExplainer = `At age ${retirementAge} there is still a gap, but the plan looks on track from age ${nextDelayedIncome.age} once ${sourceList} starts.`;
+    }
+
+    setHidden(outputIds.laterIncomeCallout, false);
+    laterIncomeCallout?.classList.toggle("is-positive", laterGap >= 0);
+    setText(
+      outputIds.laterIncomeTitle,
+      laterGap >= 0
+        ? `On track from age ${nextDelayedIncome.age} once ${sourceList} starts`
+        : `Still below target at age ${nextDelayedIncome.age} even after ${sourceList} starts`
+    );
+    setText(
+      outputIds.laterIncomeCopy,
+      `Income at age ${retirementAge}: ${formatCurrency(estimatedIncome)} a year against a target of ${formatCurrency(
+        futureSpendingTarget
+      )}. Income from age ${nextDelayedIncome.age}: about ${formatCurrency(
+        laterIncome.estimatedIncome
+      )} a year against a target of ${formatCurrency(laterIncome.futureSpendingTarget)}.`
+    );
     setText(
       outputIds.laterIncomeNote,
       `At age ${nextDelayedIncome.age}, once ${sourceList} starts, this could rise to about ${formatCurrency(
@@ -1128,11 +1163,14 @@ function updatePlanner() {
       )} a year based on the same withdrawal rule.`
     );
   } else {
+    setHidden(outputIds.laterIncomeCallout, true);
+    laterIncomeCallout?.classList.remove("is-positive");
     setText(
       outputIds.laterIncomeNote,
       "There are no later state or public/DB pension start ages waiting to kick in after your retirement age."
     );
   }
+  setText(outputIds.resultExplainer, resultExplainer);
 
   const additionalYears = findAdditionalYearsNeeded(inputs, yearsToRetirement);
   if (!additionalYears) {

@@ -227,6 +227,31 @@ h3 {
   background: rgba(255, 255, 255, 0.78);
 }
 
+.later-income-callout {
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #c7dcff;
+  border-radius: 18px;
+  background: #f4f8ff;
+}
+
+.later-income-callout.is-positive {
+  border-color: #b8dfcf;
+  background: #f1fbf6;
+}
+
+.later-income-callout h3 {
+  margin-top: 0.3rem;
+  font-size: 1.18rem;
+}
+
+.later-income-callout p:last-child {
+  margin-top: 0.45rem;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 0.94rem;
+}
+
 .answer-explainer-card h3 {
   font-size: 1.05rem;
 }
