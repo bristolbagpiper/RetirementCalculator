@@ -71,6 +71,8 @@ const outputIds = {
   answerDifferenceLabel: "answer-difference-label",
   answerDifference: "answer-difference",
   answerDifferenceNote: "answer-difference-note",
+  incomeFormulaNote: "income-formula-note",
+  laterIncomeNote: "later-income-note",
   extraYearsTitle: "extra-years-title",
   extraYearsCopy: "extra-years-copy",
   withdrawalGuidance: "withdrawalGuidance",
@@ -468,6 +470,99 @@ function getGuaranteedBenefits(inputs, yearsToRetirement) {
   };
 }
 
+function getNextDelayedIncomeStart(inputs) {
+  const candidates = [];
+
+  if (inputs.includeStatePension && inputs.statePensionStartAge > inputs.retirementAge) {
+    candidates.push({ age: inputs.statePensionStartAge, label: "state pension" });
+  }
+
+  if (inputs.includePublicPension && inputs.publicPensionStartAge > inputs.retirementAge) {
+    candidates.push({ age: inputs.publicPensionStartAge, label: "public/DB pension" });
+  }
+
+  if (!candidates.length) {
+    return null;
+  }
+
+  candidates.sort((a, b) => a.age - b.age);
+  const nextAge = candidates[0].age;
+  const labels = candidates.filter((item) => item.age === nextAge).map((item) => item.label);
+
+  return { age: nextAge, labels };
+}
+
+function simulateBalancesToAge(inputs, retirementProjection, targetAge) {
+  const yearsAfterRetirement = Math.max(0, targetAge - inputs.retirementAge);
+  const withdrawalBase =
+    (retirementProjection.pensionFuture +
+      retirementProjection.publicPensionLumpSum +
+      retirementProjection.isaFuture +
+      retirementProjection.savingsFuture +
+      retirementProjection.usableHomeEquity) *
+    (inputs.withdrawalRate / 100);
+
+  let pensionBalance = retirementProjection.pensionFuture;
+  let publicPensionLumpSumBalance = retirementProjection.publicPensionLumpSum;
+  let isaBalance = retirementProjection.isaFuture;
+  let savingsBalance = retirementProjection.savingsFuture;
+  let homeCashBalance = retirementProjection.usableHomeEquity;
+
+  for (let year = 0; year < yearsAfterRetirement; year += 1) {
+    const openingBalance = pensionBalance + publicPensionLumpSumBalance + isaBalance + savingsBalance + homeCashBalance;
+    if (openingBalance > 0) {
+      const withdrawal = withdrawalBase * Math.pow(1 + inputs.inflationRate / 100, year);
+      const plannedWithdrawal = Math.min(openingBalance, withdrawal);
+      const totalBeforeWithdrawal = Math.max(openingBalance, 1);
+
+      pensionBalance -= plannedWithdrawal * (pensionBalance / totalBeforeWithdrawal);
+      publicPensionLumpSumBalance -= plannedWithdrawal * (publicPensionLumpSumBalance / totalBeforeWithdrawal);
+      isaBalance -= plannedWithdrawal * (isaBalance / totalBeforeWithdrawal);
+      savingsBalance -= plannedWithdrawal * (savingsBalance / totalBeforeWithdrawal);
+      homeCashBalance -= plannedWithdrawal * (homeCashBalance / totalBeforeWithdrawal);
+    }
+
+    pensionBalance = Math.max(0, pensionBalance * (1 + retirementProjection.pensionDrawdownRate / 100));
+    isaBalance = Math.max(0, isaBalance * (1 + retirementProjection.isaDrawdownRate / 100));
+    savingsBalance = Math.max(0, savingsBalance * (1 + retirementProjection.savingsDrawdownRate / 100));
+    publicPensionLumpSumBalance = Math.max(0, publicPensionLumpSumBalance);
+    homeCashBalance = Math.max(0, homeCashBalance);
+
+    const nextAge = inputs.retirementAge + year + 1;
+    if (
+      inputs.includePublicPension &&
+      nextAge === inputs.publicPensionStartAge &&
+      retirementProjection.publicPensionLumpSum === 0
+    ) {
+      publicPensionLumpSumBalance += inputs.publicPensionLumpSum;
+    }
+  }
+
+  return {
+    pensionBalance,
+    publicPensionLumpSumBalance,
+    isaBalance,
+    savingsBalance,
+    homeCashBalance,
+    accessibleAssets:
+      pensionBalance + publicPensionLumpSumBalance + isaBalance + savingsBalance + homeCashBalance,
+  };
+}
+
+function calculateIncomeAtAge(inputs, retirementProjection, targetAge) {
+  const balances = simulateBalancesToAge(inputs, retirementProjection, targetAge);
+  const guaranteedBenefits = getGuaranteedBenefits(inputs, Math.max(0, targetAge - inputs.currentAge));
+  const drawdownIncome = balances.accessibleAssets * (inputs.withdrawalRate / 100);
+  const estimatedIncome = drawdownIncome + guaranteedBenefits.guaranteedIncomeTotal;
+
+  return {
+    drawdownIncome,
+    estimatedIncome,
+    accessibleAssets: balances.accessibleAssets,
+    guaranteedIncomeTotal: guaranteedBenefits.guaranteedIncomeTotal,
+  };
+}
+
 function syncOptionalUi() {
   optionalSections.forEach(({ toggleId, containerId }) => {
     const enabled = isChecked(toggleId);
@@ -555,9 +650,11 @@ function calculateProjection(inputs, yearsToRetirement) {
     usableHomeEquity,
     projectedNetWorth,
     futureSpendingTarget,
+    accessibleAssets,
     drawdownIncome,
     estimatedIncome,
     incomeGap,
+    guaranteedIncomeTotal: guaranteedBenefits.guaranteedIncomeTotal,
     pensionDrawdownRate: getDrawdownBlendedRate(inputs.pensionReturn, inputs),
     isaDrawdownRate: getDrawdownBlendedRate(inputs.isaReturn, inputs),
     savingsDrawdownRate: savingsProjection.drawdownRate,
@@ -1013,6 +1110,29 @@ function updatePlanner() {
       ? "This is the extra yearly income above your target."
       : "This is the extra yearly income you would still need."
   );
+  setText(
+    outputIds.incomeFormulaNote,
+    `At age ${retirementAge}, this is ${withdrawalRate}% of ${formatCurrency(
+      projection.accessibleAssets
+    )} plus ${formatCurrency(projection.guaranteedIncomeTotal)} of guaranteed income already started.`
+  );
+
+  const nextDelayedIncome = getNextDelayedIncomeStart(inputs);
+  if (nextDelayedIncome) {
+    const laterIncome = calculateIncomeAtAge(inputs, projection, nextDelayedIncome.age);
+    const sourceList = nextDelayedIncome.labels.join(" and ");
+    setText(
+      outputIds.laterIncomeNote,
+      `At age ${nextDelayedIncome.age}, once ${sourceList} starts, this could rise to about ${formatCurrency(
+        laterIncome.estimatedIncome
+      )} a year based on the same withdrawal rule.`
+    );
+  } else {
+    setText(
+      outputIds.laterIncomeNote,
+      "There are no later state or public/DB pension start ages waiting to kick in after your retirement age."
+    );
+  }
 
   const additionalYears = findAdditionalYearsNeeded(inputs, yearsToRetirement);
   if (!additionalYears) {
