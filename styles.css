@@ -715,6 +715,24 @@ h3 {
   opacity: 0.55;
 }
 
+.guaranteed-income-card.optional-field.is-disabled {
+  background: #f3f6fa;
+  border-color: #dbe4ee;
+}
+
+.optional-field.is-disabled .field-top > span,
+.optional-field.is-disabled .field span,
+.optional-field.is-disabled .mini-toggle {
+  color: #7c8da0;
+}
+
+.optional-field.is-disabled input,
+.optional-field.is-disabled select {
+  background: #eef3f7;
+  border-color: #d5dee8;
+  color: #7c8da0;
+}
+
 .range-wrap {
   display: flex;
   align-items: center;

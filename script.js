@@ -538,7 +538,7 @@ function calculateProjection(inputs, yearsToRetirement) {
   const futureSpendingTarget =
     inputs.targetSpending * Math.pow(1 + inputs.inflationRate / 100, Math.max(0, yearsToRetirement));
   const accessibleAssets =
-    guaranteedBenefits.publicPensionLumpSum + isaFuture + savingsFuture + usableHomeEquity;
+    pensionFuture + guaranteedBenefits.publicPensionLumpSum + isaFuture + savingsFuture + usableHomeEquity;
   const drawdownIncome = accessibleAssets * (inputs.withdrawalRate / 100);
   const estimatedIncome = drawdownIncome + guaranteedBenefits.guaranteedIncomeTotal;
   const incomeGap = estimatedIncome - futureSpendingTarget;
@@ -667,12 +667,14 @@ function buildContributionChartData(inputs, currentAge, yearsToRetirement) {
 function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement) {
   const maxYears = 25;
   const withdrawalBase =
-    (retirementProjection.publicPensionLumpSum +
+    (retirementProjection.pensionFuture +
+      retirementProjection.publicPensionLumpSum +
       retirementProjection.isaFuture +
       retirementProjection.savingsFuture +
       retirementProjection.usableHomeEquity) *
     (inputs.withdrawalRate / 100);
 
+  let pensionBalance = retirementProjection.pensionFuture;
   let publicPensionLumpSumBalance = retirementProjection.publicPensionLumpSum;
   let isaBalance = retirementProjection.isaFuture;
   let savingsBalance = retirementProjection.savingsFuture;
@@ -681,7 +683,7 @@ function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement)
 
   for (let year = 0; year <= maxYears; year += 1) {
     const age = inputs.retirementAge + year;
-    const openingBalance = publicPensionLumpSumBalance + isaBalance + savingsBalance + homeCashBalance;
+    const openingBalance = pensionBalance + publicPensionLumpSumBalance + isaBalance + savingsBalance + homeCashBalance;
     const withdrawal = withdrawalBase * Math.pow(1 + inputs.inflationRate / 100, year);
 
     series.push({
@@ -698,11 +700,13 @@ function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement)
     const plannedWithdrawal = Math.min(openingBalance, withdrawal);
     const totalBeforeWithdrawal = Math.max(openingBalance, 1);
 
+    pensionBalance -= plannedWithdrawal * (pensionBalance / totalBeforeWithdrawal);
     publicPensionLumpSumBalance -= plannedWithdrawal * (publicPensionLumpSumBalance / totalBeforeWithdrawal);
     isaBalance -= plannedWithdrawal * (isaBalance / totalBeforeWithdrawal);
     savingsBalance -= plannedWithdrawal * (savingsBalance / totalBeforeWithdrawal);
     homeCashBalance -= plannedWithdrawal * (homeCashBalance / totalBeforeWithdrawal);
 
+    pensionBalance = Math.max(0, pensionBalance * (1 + retirementProjection.pensionDrawdownRate / 100));
     publicPensionLumpSumBalance = Math.max(0, publicPensionLumpSumBalance);
     isaBalance = Math.max(0, isaBalance * (1 + retirementProjection.isaDrawdownRate / 100));
     savingsBalance = Math.max(0, savingsBalance * (1 + retirementProjection.savingsDrawdownRate / 100));
@@ -710,9 +714,9 @@ function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement)
   }
 
   return {
-    title: "Non-pension drawdown projection after retirement",
-    summary: "This estimates how your ISA, other accounts, and chosen home equity change over the first 25 years after retirement if withdrawals rise with inflation.",
-    description: "Hover the bars to compare the remaining non-pension pot and the planned withdrawal each year.",
+    title: "Drawdown projection after retirement",
+    summary: "This estimates how your pension pot, ISA, other accounts, and chosen home equity change over the first 25 years after retirement if withdrawals rise with inflation.",
+    description: "Hover the bars to compare the remaining drawdown pot and the planned withdrawal each year.",
     legend: [{ label: "Projected remaining drawdown pot", color: "#2768c9" }],
     data: series,
     tooltip(point) {

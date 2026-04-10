@@ -142,8 +142,8 @@
         <summary class="planner-summary">
           <div class="planner-summary-copy">
             <p class="panel-kicker">Optional</p>
-            <h2>Asset mix and derisking</h2>
-            <p>Use this if you want the planner to rebalance investments as retirement gets closer.</p>
+            <h2>Investment mix before and after retirement</h2>
+            <p>Use this if you want the planner to gradually move money from shares into safer assets over time.</p>
           </div>
           <div class="planner-summary-actions">
             <label class="section-toggle">
@@ -156,32 +156,33 @@
         <div class="planner-disclosure-body">
           <div class="field-grid two-up">
             <label class="field">
-              <span>Equity allocation today (%)</span>
+              <span>Shares now (%)</span>
               <input id="equityAllocationNow" type="number" min="0" max="100" step="1" value="85">
             </label>
             <label class="field">
-              <span>Equity allocation at retirement (%)</span>
+              <span>Shares by retirement (%)</span>
               <input id="equityAllocationRetirement" type="number" min="0" max="100" step="1" value="55">
             </label>
             <label class="field">
-              <span>Shares kept invested after you retire (%)</span>
+              <span>Shares after retirement (%)</span>
               <input id="equityAllocationDrawdown" type="number" min="0" max="100" step="1" value="40">
               <div class="field-help">
-                <p>0% means none in shares. 40% means 40% in shares and 60% in lower-risk assets. 100% means everything stays in shares.</p>
+                <p>0% means all safer assets. 40% means 40% shares and 60% safer assets. 100% means everything stays in shares.</p>
               </div>
             </label>
             <label class="field">
-              <span>Years before retirement to start derisking</span>
+              <span>Years before retirement to start moving to safer assets</span>
               <input id="deriskingStartYears" type="number" min="0" max="30" step="1" value="10">
             </label>
             <label class="field full-width">
-              <span>Lower-risk assets return (%)</span>
+              <span>Expected return for safer assets (%)</span>
               <input id="defensiveReturn" type="number" min="0" max="10" step="0.1" value="2.5">
             </label>
           </div>
           <div class="inline-note">
-            <p><strong>What this changes:</strong> after retirement, the planner uses this split to estimate how fast your invested money might keep growing while you are taking withdrawals.</p>
-            <p>Your yearly drawdown income is based on your ISA, other accounts, and chosen home equity. Private pensions are currently not included in that drawdown figure.</p>
+            <p><strong>What this affects:</strong> this only applies to invested pots such as your private pension, S&amp;S ISA, and any GIA.</p>
+            <p><strong>Simple rule:</strong> more shares means higher expected growth but more ups and downs. More safer assets means lower expected growth but a steadier plan.</p>
+            <p><strong>After retirement:</strong> the planner uses your <em>Shares after retirement</em> setting while working out drawdown.</p>
           </div>
         </div>
       </details>
@@ -380,7 +381,7 @@
           <div class="answer-item">
             <span>You could generate each year</span>
             <strong id="answer-income-output">&pound;0</strong>
-            <p>From guaranteed income, non-pension assets, and chosen home equity.</p>
+            <p>From pension drawdown, other invested assets, guaranteed income, and chosen home equity.</p>
           </div>
           <div class="answer-item answer-item-strong">
             <span id="answer-difference-label">Expected shortfall</span>
@@ -430,7 +431,7 @@
         <section class="results-card">
           <h3>Income estimate</h3>
           <div class="results-row">
-            <span>Drawdown from non-pension assets</span>
+            <span>Drawdown from pension, ISA, other accounts and home equity</span>
             <strong id="drawdown-income">&pound;0</strong>
           </div>
           <div class="results-row">
