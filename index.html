@@ -160,43 +160,6 @@
         </div>
       </section>
 
-      <details class="planner-disclosure panel-card" id="assetMixSection">
-        <summary class="planner-summary">
-          <div class="planner-summary-copy">
-            <p class="panel-kicker">Optional</p>
-            <h2>Drawdown and derisking</h2>
-            <p>Set how invested your pension and ISA stay now and by the time you retire.</p>
-          </div>
-          <div class="planner-summary-actions">
-            <label class="section-toggle">
-              <input id="includeAssetMix" type="checkbox" checked>
-              <span>Include this section</span>
-            </label>
-            <span class="planner-summary-indicator" aria-hidden="true"></span>
-          </div>
-        </summary>
-        <div class="planner-disclosure-body">
-          <div class="field-grid two-up">
-            <label class="field">
-              <span>Shares now (%)</span>
-              <input id="equityAllocationNow" type="number" min="0" max="100" step="1" value="85">
-            </label>
-            <label class="field">
-              <span>Shares at retirement (%)</span>
-              <input id="equityAllocationRetirement" type="number" min="0" max="100" step="1" value="55">
-            </label>
-            <label class="field">
-              <span>Start moving to safer assets this many years before retirement</span>
-              <input id="deriskingStartYears" type="number" min="0" max="30" step="1" value="10">
-            </label>
-            <label class="field full-width">
-              <span>Expected return for safer assets (%)</span>
-              <input id="defensiveReturn" type="number" min="0" max="10" step="0.1" value="2.5">
-            </label>
-          </div>
-        </div>
-      </details>
-
       <details class="planner-disclosure panel-card" id="pensionSection">
         <summary class="planner-summary">
           <div class="planner-summary-copy">
@@ -352,6 +315,43 @@
           <button class="secondary-button" id="addSavingsAccount" type="button">
             Add another savings account
           </button>
+        </div>
+      </details>
+
+      <details class="planner-disclosure panel-card" id="assetMixSection">
+        <summary class="planner-summary">
+          <div class="planner-summary-copy">
+            <p class="panel-kicker">Optional</p>
+            <h2>Drawdown and derisking</h2>
+            <p>Set how invested your pension and ISA stay now and by the time you retire.</p>
+          </div>
+          <div class="planner-summary-actions">
+            <label class="section-toggle">
+              <input id="includeAssetMix" type="checkbox" checked>
+              <span>Include this section</span>
+            </label>
+            <span class="planner-summary-indicator" aria-hidden="true"></span>
+          </div>
+        </summary>
+        <div class="planner-disclosure-body">
+          <div class="field-grid two-up">
+            <label class="field">
+              <span>Shares now (%)</span>
+              <input id="equityAllocationNow" type="number" min="0" max="100" step="1" value="85">
+            </label>
+            <label class="field">
+              <span>Shares at retirement (%)</span>
+              <input id="equityAllocationRetirement" type="number" min="0" max="100" step="1" value="55">
+            </label>
+            <label class="field">
+              <span>Start moving to safer assets this many years before retirement</span>
+              <input id="deriskingStartYears" type="number" min="0" max="30" step="1" value="10">
+            </label>
+            <label class="field full-width">
+              <span>Expected return for safer assets (%)</span>
+              <input id="defensiveReturn" type="number" min="0" max="10" step="0.1" value="2.5">
+            </label>
+          </div>
         </div>
       </details>
     </form>
