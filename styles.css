@@ -429,10 +429,15 @@ h3 {
   padding: 1rem 1.05rem;
   cursor: pointer;
   list-style: none;
+  background: var(--surface-soft);
 }
 
 .planner-summary::-webkit-details-marker {
   display: none;
+}
+
+.planner-summary:hover {
+  background: #f1f6fb;
 }
 
 .planner-summary-copy {
@@ -460,17 +465,45 @@ h3 {
 }
 
 .planner-summary-indicator {
-  color: var(--accent-strong);
-  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.35rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.88rem;
   font-weight: 700;
 }
 
-.planner-disclosure[open] .planner-summary-indicator::after {
-  content: " less";
+.planner-summary-indicator::before {
+  content: "Open section";
 }
 
-.planner-disclosure:not([open]) .planner-summary-indicator::after {
-  content: " more";
+.planner-summary-indicator::after {
+  content: "▾";
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.planner-disclosure[open] .planner-summary {
+  background: #f7fbff;
+}
+
+.planner-disclosure[open] .planner-summary-indicator {
+  border-color: rgba(39, 104, 201, 0.24);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.planner-disclosure[open] .planner-summary-indicator::before {
+  content: "Close section";
+}
+
+.planner-disclosure[open] .planner-summary-indicator::after {
+  content: "▴";
 }
 
 .planner-disclosure-body {
@@ -973,6 +1006,16 @@ input[type="range"] {
   .charts-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .planner-summary-actions {
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  .planner-summary-indicator {
+    width: 100%;
+    justify-content: center;
   }
 
   .rate-presets {
