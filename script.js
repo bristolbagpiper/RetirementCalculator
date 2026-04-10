@@ -57,6 +57,45 @@ const savingsTypeDefaults = {
   savings_account: { label: "Savings account", rate: 2.5 },
 };
 
+const TAX_FREE_SAVINGS_TYPES = new Set(["cash_isa", "cash_lisa", "premium_bonds"]);
+const TAXABLE_INTEREST_SAVINGS_TYPES = new Set([
+  "hysa",
+  "fixed_bond",
+  "notice_account",
+  "nsi_income_bonds",
+  "savings_account",
+]);
+const GIA_DIVIDEND_YIELD = 2;
+const UK_TAX_PROFILES = {
+  basic: {
+    label: "basic-rate",
+    savingsRate: 0.2,
+    dividendRate: 0.1075,
+    cgtRate: 0.18,
+    personalSavingsAllowance: 1000,
+    dividendAllowance: 500,
+    cgtAllowance: 3000,
+  },
+  higher: {
+    label: "higher-rate",
+    savingsRate: 0.4,
+    dividendRate: 0.3575,
+    cgtRate: 0.24,
+    personalSavingsAllowance: 500,
+    dividendAllowance: 500,
+    cgtAllowance: 3000,
+  },
+  additional: {
+    label: "additional-rate",
+    savingsRate: 0.45,
+    dividendRate: 0.3935,
+    cgtRate: 0.24,
+    personalSavingsAllowance: 0,
+    dividendAllowance: 500,
+    cgtAllowance: 3000,
+  },
+};
+
 const outputIds = {
   yearsToRetirement: "years-to-retirement",
   projectedNetWorth: "projected-net-worth",
@@ -113,6 +152,7 @@ const outputIds = {
   totalIncomeOutput: "total-income-output",
   assumptionGrowth: "assumption-growth",
   assumptionInflation: "assumption-inflation",
+  assumptionTax: "assumption-tax",
   assumptionEquity: "assumption-equity",
   equityUsageLabel: "equity-usage-label",
   chartTitle: "chartTitle",
@@ -150,6 +190,15 @@ function setHidden(id, hidden) {
   }
 }
 
+function getMonthlyContributionForMonth(baseMonthly, monthIndex, inflationRate, increaseWithInflation) {
+  if (!increaseWithInflation) {
+    return baseMonthly;
+  }
+
+  const annualStep = Math.floor(Math.max(0, monthIndex) / 12);
+  return baseMonthly * Math.pow(1 + inflationRate / 100, annualStep);
+}
+
 function futureValueWithMonthlyContributions(initial, monthlyContribution, annualRate, years) {
   const safeYears = Math.max(0, years);
   const months = Math.round(safeYears * 12);
@@ -169,7 +218,13 @@ function futureValueWithMonthlyContributions(initial, monthlyContribution, annua
   return initial * growthFactor + contributionValue;
 }
 
-function futureValueWithMonthlyContributionsSchedule(initial, monthlyContribution, years, annualRateAtMonth) {
+function futureValueWithMonthlyContributionsSchedule(
+  initial,
+  monthlyContribution,
+  years,
+  annualRateAtMonth,
+  monthlyContributionAtMonth = () => monthlyContribution
+) {
   const safeYears = Math.max(0, years);
   const months = Math.round(safeYears * 12);
   let balance = initial;
@@ -177,10 +232,24 @@ function futureValueWithMonthlyContributionsSchedule(initial, monthlyContributio
   for (let month = 0; month < months; month += 1) {
     const annualRate = annualRateAtMonth(month);
     const monthlyRate = annualRate / 100 / 12;
-    balance = balance * (1 + monthlyRate) + monthlyContribution;
+    balance = balance * (1 + monthlyRate) + monthlyContributionAtMonth(month);
   }
 
   return balance;
+}
+
+function cumulativeContributionsOverYears(baseMonthly, years, inflationRate, increaseWithInflation) {
+  const safeYears = Math.max(0, years);
+  let total = 0;
+
+  for (let year = 0; year < safeYears; year += 1) {
+    const monthlyContribution = increaseWithInflation
+      ? baseMonthly * Math.pow(1 + inflationRate / 100, year)
+      : baseMonthly;
+    total += monthlyContribution * 12;
+  }
+
+  return total;
 }
 
 function futureValueLumpSum(initial, annualRate, years) {
@@ -280,6 +349,7 @@ function createSavingsRow(values = {}) {
   const balanceField = fragment.querySelector(".savings-balance");
   const monthlyField = fragment.querySelector(".savings-monthly");
   const rateField = fragment.querySelector(".savings-rate");
+  const inflationLinkedField = fragment.querySelector(".savings-inflation-linked");
   const removeButton = fragment.querySelector(".remove-button");
 
   const selectedType = values.type || "cash_isa";
@@ -289,6 +359,7 @@ function createSavingsRow(values = {}) {
   balanceField.value = values.balance ?? 0;
   monthlyField.value = values.monthly ?? 0;
   rateField.value = values.rate ?? defaultRate;
+  inflationLinkedField.checked = Boolean(values.inflationLinked);
   rateField.dataset.suggestedRate = String(defaultRate);
 
   typeField.addEventListener("change", () => {
@@ -325,13 +396,61 @@ function calculateSavingsFutureValue(yearsToRetirement) {
     const balance = Number(row.querySelector(".savings-balance")?.value) || 0;
     const monthly = Number(row.querySelector(".savings-monthly")?.value) || 0;
     const rate = Number(row.querySelector(".savings-rate")?.value) || 0;
+    const inflationLinked = Boolean(row.querySelector(".savings-inflation-linked")?.checked);
 
-    return total + futureValueWithMonthlyContributions(balance, monthly, rate, yearsToRetirement);
+    return (
+      total +
+      futureValueWithMonthlyContributionsSchedule(
+        balance,
+        monthly,
+        yearsToRetirement,
+        () => rate,
+        (month) => getMonthlyContributionForMonth(monthly, month, readNumber("inflationRate"), inflationLinked)
+      )
+    );
   }, 0);
 }
 
 function clampPercentage(value) {
   return Math.max(0, Math.min(100, value));
+}
+
+function isTaxFreeSavingsType(type) {
+  return TAX_FREE_SAVINGS_TYPES.has(type);
+}
+
+function isTaxableInterestSavingsType(type) {
+  return TAXABLE_INTEREST_SAVINGS_TYPES.has(type);
+}
+
+function isGiaSavingsType(type) {
+  return type === "gia";
+}
+
+function getGiaDividendRate(rate) {
+  return Math.max(0, Math.min(GIA_DIVIDEND_YIELD, rate));
+}
+
+function getUkTaxProfile(taxBand) {
+  return UK_TAX_PROFILES[taxBand] || UK_TAX_PROFILES.basic;
+}
+
+function getEstimatedNetSavingsRate(type, rate, taxProfile, includeTaxEstimate) {
+  if (!includeTaxEstimate || isTaxFreeSavingsType(type)) {
+    return rate;
+  }
+
+  if (isTaxableInterestSavingsType(type)) {
+    return rate * (1 - taxProfile.savingsRate);
+  }
+
+  if (isGiaSavingsType(type)) {
+    const dividendRate = getGiaDividendRate(rate);
+    const capitalRate = Math.max(0, rate - dividendRate);
+    return capitalRate * (1 - taxProfile.cgtRate) + dividendRate * (1 - taxProfile.dividendRate);
+  }
+
+  return rate;
 }
 
 function blendedReturn(growthReturn, defensiveReturn, equityAllocation) {
@@ -375,44 +494,139 @@ function getDrawdownBlendedRate(growthReturn, inputs) {
   return blendedReturn(growthReturn, inputs.defensiveReturn, inputs.equityAllocationRetirement);
 }
 
-function isGlidePathSavingsType(type) {
-  return type === "gia";
-}
-
 function calculateSavingsProjection(yearsToRetirement, inputs) {
-  let total = 0;
-  let drawdownWeightedRate = 0;
-  let weightTotal = 0;
-
-  getSavingsRows().forEach((row) => {
+  const taxProfile = getUkTaxProfile(inputs.taxBand);
+  const accountStates = getSavingsRows().map((row) => {
     const type = row.querySelector(".savings-type")?.value || "savings_account";
     const balance = Number(row.querySelector(".savings-balance")?.value) || 0;
     const monthly = Number(row.querySelector(".savings-monthly")?.value) || 0;
     const rate = Number(row.querySelector(".savings-rate")?.value) || 0;
+    const inflationLinked = Boolean(row.querySelector(".savings-inflation-linked")?.checked);
 
-    let futureValue = 0;
-    let postRetirementRate = rate;
-
-    if (isGlidePathSavingsType(type)) {
-      futureValue = futureValueWithMonthlyContributionsSchedule(
-        balance,
-        monthly,
-        yearsToRetirement,
-        (month) => getPreRetirementBlendedRate(rate, month, yearsToRetirement, inputs)
-      );
-      postRetirementRate = getDrawdownBlendedRate(rate, inputs);
-    } else {
-      futureValue = futureValueWithMonthlyContributions(balance, monthly, rate, yearsToRetirement);
-    }
-
-    total += futureValue;
-    drawdownWeightedRate += futureValue * postRetirementRate;
-    weightTotal += futureValue;
+    return {
+      type,
+      balance,
+      monthly,
+      rate,
+      inflationLinked,
+      basis: balance,
+      yearlyInterest: 0,
+      yearlyDividends: 0,
+    };
   });
+
+  const totalMonths = Math.max(0, Math.round(yearsToRetirement * 12));
+
+  for (let month = 0; month < totalMonths; month += 1) {
+    accountStates.forEach((account) => {
+      const monthlyContribution = getMonthlyContributionForMonth(
+        account.monthly,
+        month,
+        inputs.inflationRate,
+        account.inflationLinked
+      );
+
+      account.balance += monthlyContribution;
+      account.basis += monthlyContribution;
+
+      if (isTaxFreeSavingsType(account.type)) {
+        account.balance *= 1 + account.rate / 100 / 12;
+        return;
+      }
+
+      if (isTaxableInterestSavingsType(account.type)) {
+        const grossInterest = account.balance * (account.rate / 100 / 12);
+        account.balance += grossInterest;
+        account.yearlyInterest += grossInterest;
+        return;
+      }
+
+      if (isGiaSavingsType(account.type)) {
+        const dividendRate = getGiaDividendRate(account.rate);
+        const capitalRate = Math.max(0, account.rate - dividendRate);
+        const dividendAmount = account.balance * (dividendRate / 100 / 12);
+        const capitalGrowth = account.balance * (capitalRate / 100 / 12);
+
+        account.balance += dividendAmount + capitalGrowth;
+        account.yearlyDividends += dividendAmount;
+        return;
+      }
+
+      account.balance *= 1 + account.rate / 100 / 12;
+    });
+
+    if ((month + 1) % 12 === 0 && inputs.includeTaxEstimate) {
+      const totalInterest = accountStates.reduce((sum, account) => sum + account.yearlyInterest, 0);
+      const taxableInterestRatio =
+        totalInterest > 0
+          ? Math.max(0, totalInterest - taxProfile.personalSavingsAllowance) / totalInterest
+          : 0;
+
+      const totalDividends = accountStates.reduce((sum, account) => sum + account.yearlyDividends, 0);
+      const taxableDividendRatio =
+        totalDividends > 0
+          ? Math.max(0, totalDividends - taxProfile.dividendAllowance) / totalDividends
+          : 0;
+
+      accountStates.forEach((account) => {
+        if (account.yearlyInterest > 0) {
+          account.balance -= account.yearlyInterest * taxableInterestRatio * taxProfile.savingsRate;
+        }
+
+        if (account.yearlyDividends > 0) {
+          account.balance -= account.yearlyDividends * taxableDividendRatio * taxProfile.dividendRate;
+        }
+
+        account.yearlyInterest = 0;
+        account.yearlyDividends = 0;
+      });
+    } else if ((month + 1) % 12 === 0) {
+      accountStates.forEach((account) => {
+        account.yearlyInterest = 0;
+        account.yearlyDividends = 0;
+      });
+    }
+  }
+
+  if (inputs.includeTaxEstimate) {
+    const totalGiaGains = accountStates.reduce((sum, account) => {
+      if (!isGiaSavingsType(account.type)) {
+        return sum;
+      }
+
+      return sum + Math.max(0, account.balance - account.basis);
+    }, 0);
+
+    const taxableGainRatio =
+      totalGiaGains > 0 ? Math.max(0, totalGiaGains - taxProfile.cgtAllowance) / totalGiaGains : 0;
+
+    accountStates.forEach((account) => {
+      if (!isGiaSavingsType(account.type)) {
+        return;
+      }
+
+      const gain = Math.max(0, account.balance - account.basis);
+      account.balance -= gain * taxableGainRatio * taxProfile.cgtRate;
+    });
+  }
+
+  const total = accountStates.reduce((sum, account) => sum + account.balance, 0);
+  const drawdownWeightedRate = accountStates.reduce((sum, account) => {
+    const growthRate = isGiaSavingsType(account.type)
+      ? getDrawdownBlendedRate(account.rate, inputs)
+      : account.rate;
+    const netRate = getEstimatedNetSavingsRate(
+      account.type,
+      growthRate,
+      taxProfile,
+      inputs.includeTaxEstimate
+    );
+    return sum + account.balance * netRate;
+  }, 0);
 
   return {
     total,
-    drawdownRate: weightTotal > 0 ? drawdownWeightedRate / weightTotal : 0,
+    drawdownRate: total > 0 ? drawdownWeightedRate / total : 0,
   };
 }
 
@@ -420,6 +634,14 @@ function getSavingsMonthlyContribution() {
   return getSavingsRows().reduce((total, row) => {
     const monthly = Number(row.querySelector(".savings-monthly")?.value) || 0;
     return total + monthly;
+  }, 0);
+}
+
+function getSavingsContributionTotalOverYears(years, inflationRate) {
+  return getSavingsRows().reduce((total, row) => {
+    const monthly = Number(row.querySelector(".savings-monthly")?.value) || 0;
+    const inflationLinked = Boolean(row.querySelector(".savings-inflation-linked")?.checked);
+    return total + cumulativeContributionsOverYears(monthly, years, inflationRate, inflationLinked);
   }, 0);
 }
 
@@ -615,14 +837,28 @@ function calculateProjection(inputs, yearsToRetirement) {
     inputs.pensionCurrent,
     inputs.pensionMonthlyTotal,
     yearsToRetirement,
-    (month) => getPreRetirementBlendedRate(inputs.pensionReturn, month, yearsToRetirement, inputs)
+    (month) => getPreRetirementBlendedRate(inputs.pensionReturn, month, yearsToRetirement, inputs),
+    (month) =>
+      getMonthlyContributionForMonth(
+        inputs.pensionMonthlyTotal,
+        month,
+        inputs.inflationRate,
+        inputs.pensionContributionInflation
+      )
   );
 
   const isaFuture = futureValueWithMonthlyContributionsSchedule(
     inputs.isaCurrent,
     inputs.isaMonthly,
     yearsToRetirement,
-    (month) => getPreRetirementBlendedRate(inputs.isaReturn, month, yearsToRetirement, inputs)
+    (month) => getPreRetirementBlendedRate(inputs.isaReturn, month, yearsToRetirement, inputs),
+    (month) =>
+      getMonthlyContributionForMonth(
+        inputs.isaMonthly,
+        month,
+        inputs.inflationRate,
+        inputs.isaContributionInflation
+      )
   );
 
   const guaranteedBenefits = getGuaranteedBenefits(inputs, yearsToRetirement);
@@ -731,15 +967,24 @@ function buildGrowthChartData(inputs, currentAge, yearsToRetirement) {
 }
 
 function buildContributionChartData(inputs, currentAge, yearsToRetirement) {
-  const pensionYearly = inputs.pensionMonthlyTotal * 12;
-  const isaYearly = inputs.isaMonthly * 12;
-  const savingsYearly = inputs.includeOtherAccounts ? getSavingsMonthlyContribution() * 12 : 0;
   const series = [];
 
   for (let year = 0; year <= yearsToRetirement; year += 1) {
-    const pensionContrib = pensionYearly * year;
-    const isaContrib = isaYearly * year;
-    const savingsContrib = savingsYearly * year;
+    const pensionContrib = cumulativeContributionsOverYears(
+      inputs.pensionMonthlyTotal,
+      year,
+      inputs.inflationRate,
+      inputs.pensionContributionInflation
+    );
+    const isaContrib = cumulativeContributionsOverYears(
+      inputs.isaMonthly,
+      year,
+      inputs.inflationRate,
+      inputs.isaContributionInflation
+    );
+    const savingsContrib = inputs.includeOtherAccounts
+      ? getSavingsContributionTotalOverYears(year, inputs.inflationRate)
+      : 0;
     const total = pensionContrib + isaContrib + savingsContrib;
 
     series.push({
@@ -1002,6 +1247,8 @@ function updatePlanner() {
   const includeIsa = isChecked("includeIsa");
   const includeOtherAccounts = isChecked("includeOtherAccounts");
   const includeHome = isChecked("includeHome");
+  const includeTaxEstimate = includeOtherAccounts && isChecked("includeTaxEstimate");
+  const taxBand = document.getElementById("taxBand")?.value || "basic";
 
   const statePensionIncome = includeStatePension ? readNumber("statePensionIncome") : 0;
   const statePensionStartAge = includeStatePension ? readNumber("statePensionStartAge") : 67;
@@ -1014,10 +1261,12 @@ function updatePlanner() {
   const pensionReturn = includePension ? readNumber("pensionReturn") : 0;
   const pensionMonthlyEmployee = includePension ? readNumber("pensionMonthlyEmployee") : 0;
   const pensionMonthlyEmployer = includePension ? readNumber("pensionMonthlyEmployer") : 0;
+  const pensionContributionInflation = includePension && isChecked("pensionContributionInflation");
 
   const isaCurrent = includeIsa ? readNumber("isaCurrent") : 0;
   const isaReturn = includeIsa ? readNumber("isaReturn") : 0;
   const isaMonthly = includeIsa ? readNumber("isaMonthly") : 0;
+  const isaContributionInflation = includeIsa && isChecked("isaContributionInflation");
 
   const homeValue = includeHome ? readNumber("homeValue") : 0;
   const homeGrowth = includeHome ? readNumber("homeGrowth") : 0;
@@ -1049,10 +1298,14 @@ function updatePlanner() {
     pensionCurrent,
     pensionReturn,
     pensionMonthlyTotal: pensionMonthlyEmployee + pensionMonthlyEmployer,
+    pensionContributionInflation,
     isaCurrent,
     isaReturn,
     isaMonthly,
+    isaContributionInflation,
     includeOtherAccounts,
+    includeTaxEstimate,
+    taxBand,
     homeValue,
     homeGrowth,
     mortgageBalance,
@@ -1240,8 +1493,20 @@ function updatePlanner() {
   }
   setText(
     outputIds.assumptionInflation,
-    `Your ${formatCurrency(targetSpending)} target is inflated by ${inflationRate}% for ${yearsToRetirement} years. State pension starts at ${statePensionStartAge}, and public/DB pension starts at ${publicPensionStartAge}.`
+    `Your ${formatCurrency(targetSpending)} target is inflated by ${inflationRate}% for ${yearsToRetirement} years. Any contribution options switched to inflation-linked also step up once a year at the same rate. State pension starts at ${statePensionStartAge}, and public/DB pension starts at ${publicPensionStartAge}.`
   );
+  if (includeTaxEstimate) {
+    const taxProfile = getUkTaxProfile(taxBand);
+    setText(
+      outputIds.assumptionTax,
+      `A simple ${taxProfile.label} UK tax estimate is applied to taxable savings interest and GIA returns. ISAs, LISAs, and Premium Bonds stay tax-free in the model.`
+    );
+  } else {
+    setText(
+      outputIds.assumptionTax,
+      "Tax is not being estimated on taxable accounts, so GIA and taxable savings may look optimistic."
+    );
+  }
   setText(
     outputIds.assumptionEquity,
     `Home equity uses a ${mortgageRate}% mortgage rate with ${mortgageTermYears} years remaining, and ${equityUsageRate}% of projected equity is included in retirement funding.`

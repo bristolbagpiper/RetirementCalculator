@@ -28,12 +28,6 @@
         <div class="panel-heading">
           <p class="panel-kicker">Basics</p>
           <h2>Retirement target</h2>
-          <p class="section-copy">
-            Start with the age you want to stop working and the amount you think you will need each
-            year in retirement, entered in today&apos;s money. Private pensions go in the section
-            below as investment pots. State pension and public or defined-benefit pensions are
-            separate here because they can start at different ages and may include a lump sum.
-          </p>
         </div>
         <div class="field-grid three-up">
           <label class="field">
@@ -208,6 +202,10 @@
               <span>Employer monthly contribution</span>
               <input id="pensionMonthlyEmployer" type="number" min="0" step="50" value="350">
             </label>
+            <label class="inline-checkbox full-width">
+              <input id="pensionContributionInflation" type="checkbox">
+              <span>Increase these monthly contributions with inflation each year</span>
+            </label>
           </div>
         </div>
       </details>
@@ -240,6 +238,10 @@
             <label class="field">
               <span>Monthly ISA contribution</span>
               <input id="isaMonthly" type="number" min="0" step="50" value="500">
+            </label>
+            <label class="inline-checkbox full-width">
+              <input id="isaContributionInflation" type="checkbox">
+              <span>Increase this monthly contribution with inflation each year</span>
             </label>
           </div>
         </div>
@@ -310,11 +312,29 @@
           </div>
         </summary>
         <div class="planner-disclosure-body">
+          <div class="tax-controls">
+            <label class="inline-checkbox">
+              <input id="includeTaxEstimate" type="checkbox" checked>
+              <span>Use a simple UK tax estimate for taxable accounts</span>
+            </label>
+            <label class="field tax-band-field">
+              <span>Tax band</span>
+              <select id="taxBand">
+                <option value="basic">Basic rate</option>
+                <option value="higher">Higher rate</option>
+                <option value="additional">Additional rate</option>
+              </select>
+            </label>
+          </div>
+          <p class="section-copy tax-copy">
+            This affects GIA and taxable savings interest. ISAs, LISAs, and Premium Bonds stay tax-free in the model.
+          </p>
           <div class="savings-header">
             <span>Account type</span>
             <span>Current balance</span>
             <span>Monthly saving</span>
             <span>Yearly rate (%)</span>
+            <span>Inflation-linked</span>
             <span></span>
           </div>
           <div class="savings-rows" id="savingsAccounts" aria-live="polite"></div>
@@ -519,6 +539,7 @@
         <ul>
           <li id="assumption-growth">Monthly compounding is used for pension and ISA growth.</li>
           <li id="assumption-inflation">Target spending is inflated from today to retirement.</li>
+          <li id="assumption-tax">Tax is not being estimated on taxable accounts.</li>
           <li id="assumption-equity">Only the chosen share of home equity is counted toward funding.</li>
         </ul>
       </section>
@@ -558,6 +579,10 @@
       <label class="field">
         <span class="sr-only">Yearly rate</span>
         <input class="savings-rate" type="number" min="0" max="15" step="0.1" value="0">
+      </label>
+      <label class="savings-checkbox">
+        <input class="savings-inflation-linked" type="checkbox">
+        <span>Inflation</span>
       </label>
       <button class="remove-button" type="button">Remove</button>
     </div>

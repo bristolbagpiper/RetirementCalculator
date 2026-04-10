@@ -438,6 +438,46 @@ h3 {
   line-height: 1.45;
 }
 
+.inline-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 2.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  cursor: pointer;
+}
+
+.inline-checkbox input {
+  margin: 0;
+}
+
+.inline-checkbox span {
+  color: var(--ink);
+  font-size: 0.94rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.tax-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(180px, 0.7fr);
+  gap: 0.8rem;
+  align-items: end;
+  margin-bottom: 0.45rem;
+}
+
+.tax-band-field {
+  min-width: 0;
+}
+
+.tax-copy {
+  margin: 0 0 0.8rem;
+  max-width: 70ch;
+}
+
 .field input {
   width: 100%;
   padding: 0.72rem 0.8rem;
@@ -648,7 +688,7 @@ h3 {
 .savings-header,
 .savings-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) repeat(3, minmax(0, 1fr)) auto;
+  grid-template-columns: minmax(0, 1.2fr) repeat(3, minmax(0, 1fr)) minmax(110px, 0.75fr) auto;
   gap: 0.85rem;
   align-items: end;
 }
@@ -674,6 +714,25 @@ h3 {
   border: 1px solid var(--border);
   border-radius: 18px;
   background: var(--surface-soft);
+}
+
+.savings-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.9rem;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.savings-checkbox input {
+  margin: 0;
 }
 
 .secondary-button,
@@ -1207,7 +1266,8 @@ input[type="range"] {
 
   .compact-grid,
   .subfield-grid,
-  .three-up {
+  .three-up,
+  .tax-controls {
     grid-template-columns: 1fr;
   }
 
