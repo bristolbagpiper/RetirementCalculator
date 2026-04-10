@@ -19,6 +19,7 @@ const interactiveChart = document.getElementById("interactiveChart");
 const chartTooltip = document.getElementById("chartTooltip");
 const chartStage = document.getElementById("chartStage");
 const chartLegend = document.getElementById("chartLegend");
+const plannerSummaryToggles = Array.from(document.querySelectorAll(".planner-summary .section-toggle"));
 const optionalSections = [
   { toggleId: "includeAssetMix", containerId: "assetMixSection" },
   { toggleId: "includePension", containerId: "pensionSection" },
@@ -1065,5 +1066,11 @@ optionalFields.forEach(({ toggleId }) => {
 
 planner.addEventListener("input", updatePlanner);
 planner.addEventListener("change", updatePlanner);
+
+plannerSummaryToggles.forEach((toggle) => {
+  toggle.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+});
 
 updatePlanner();

@@ -23,25 +23,6 @@
   </header>
 
   <main class="shell layout">
-    <section class="planner-guide" aria-label="Planner guide">
-      <div class="planner-guide-copy">
-        <p class="panel-kicker">Start Here</p>
-        <h2>Fill in the basics first, then add only the sections you actually use.</h2>
-        <p>
-          You do not need every section. Turn off anything you do not have, then check the result
-          and charts underneath.
-        </p>
-      </div>
-      <nav class="planner-guide-links" aria-label="Jump to section">
-        <a href="#basicsSection">Basics</a>
-        <a href="#pensionSection">Pension</a>
-        <a href="#isaSection">ISA</a>
-        <a href="#homeSection">Home</a>
-        <a href="#otherAccountsSection">Other accounts</a>
-        <a href="#resultsSection">Results</a>
-      </nav>
-    </section>
-
     <form class="planner" id="planner" data-planner>
       <section class="panel-card panel-card-wide panel-card-aside" id="basicsSection">
         <div class="panel-heading">
@@ -108,205 +89,204 @@
         </div>
       </section>
 
-      <div class="planner-columns">
-        <div class="planner-column">
-          <section class="panel-card panel-card-half panel-card-aside" id="assetMixSection">
-            <div class="panel-heading">
-              <div class="panel-heading-top">
-                <div>
-                  <p class="panel-kicker">Asset Mix</p>
-                  <h2>Derisking and rebalance glide path</h2>
-                </div>
-                <label class="section-toggle">
-                  <input id="includeAssetMix" type="checkbox" checked>
-                  <span>Include this section</span>
-                </label>
-              </div>
-              <p class="section-copy">
-                Gradually move invested assets away from an equity-heavy mix as retirement gets closer.
-              </p>
-              <p class="section-copy">
-                This applies to your private pension, S&amp;S ISA, and any GIA rows in other accounts.
-              </p>
-            </div>
-            <div class="field-grid two-up">
-              <label class="field">
-                <span>Equity allocation today (%)</span>
-                <input id="equityAllocationNow" type="number" min="0" max="100" step="1" value="85">
-              </label>
-              <label class="field">
-                <span>Equity allocation at retirement (%)</span>
-                <input id="equityAllocationRetirement" type="number" min="0" max="100" step="1" value="55">
-              </label>
-              <label class="field">
-                <span>Equity allocation during drawdown (%)</span>
-                <input id="equityAllocationDrawdown" type="number" min="0" max="100" step="1" value="40">
-              </label>
-              <label class="field">
-                <span>Years before retirement to start derisking</span>
-                <input id="deriskingStartYears" type="number" min="0" max="30" step="1" value="10">
-              </label>
-              <label class="field full-width">
-                <span>Lower-risk assets return (%)</span>
-                <input id="defensiveReturn" type="number" min="0" max="10" step="0.1" value="2.5">
-              </label>
-            </div>
-          </section>
-
-          <section class="panel-card panel-card-half panel-card-aside" id="isaSection">
-            <div class="panel-heading">
-              <div class="panel-heading-top">
-                <div>
-                  <p class="panel-kicker">S&amp;S ISA</p>
-                  <h2>ISA compound growth</h2>
-                </div>
-                <label class="section-toggle">
-                  <input id="includeIsa" type="checkbox" checked>
-                  <span>Include this section</span>
-                </label>
-              </div>
-              <p class="section-copy">
-                Add your current ISA and monthly investing amount to estimate how much tax-free money it
-                could hold by retirement.
-              </p>
-            </div>
-            <div class="field-grid three-up">
-              <label class="field">
-                <span>Current ISA value</span>
-                <input id="isaCurrent" type="number" min="0" step="1000" value="40000">
-              </label>
-              <label class="field">
-                <span>Expected annual return (%)</span>
-                <input id="isaReturn" type="number" min="0" max="15" step="0.1" value="6">
-              </label>
-              <label class="field">
-                <span>Monthly ISA contribution</span>
-                <input id="isaMonthly" type="number" min="0" step="50" value="500">
-              </label>
-            </div>
-          </section>
+      <details class="planner-disclosure panel-card" id="assetMixSection">
+        <summary class="planner-summary">
+          <div class="planner-summary-copy">
+            <p class="panel-kicker">Optional</p>
+            <h2>Asset mix and derisking</h2>
+            <p>Use this if you want the planner to rebalance investments as retirement gets closer.</p>
+          </div>
+          <div class="planner-summary-actions">
+            <label class="section-toggle">
+              <input id="includeAssetMix" type="checkbox" checked>
+              <span>Include this section</span>
+            </label>
+            <span class="planner-summary-indicator" aria-hidden="true">Show</span>
+          </div>
+        </summary>
+        <div class="planner-disclosure-body">
+          <div class="field-grid two-up">
+            <label class="field">
+              <span>Equity allocation today (%)</span>
+              <input id="equityAllocationNow" type="number" min="0" max="100" step="1" value="85">
+            </label>
+            <label class="field">
+              <span>Equity allocation at retirement (%)</span>
+              <input id="equityAllocationRetirement" type="number" min="0" max="100" step="1" value="55">
+            </label>
+            <label class="field">
+              <span>Equity allocation during drawdown (%)</span>
+              <input id="equityAllocationDrawdown" type="number" min="0" max="100" step="1" value="40">
+            </label>
+            <label class="field">
+              <span>Years before retirement to start derisking</span>
+              <input id="deriskingStartYears" type="number" min="0" max="30" step="1" value="10">
+            </label>
+            <label class="field full-width">
+              <span>Lower-risk assets return (%)</span>
+              <input id="defensiveReturn" type="number" min="0" max="10" step="0.1" value="2.5">
+            </label>
+          </div>
         </div>
+      </details>
 
-        <div class="planner-column">
-          <section class="panel-card panel-card-half panel-card-aside" id="pensionSection">
-            <div class="panel-heading">
-              <div class="panel-heading-top">
-                <div>
-                  <p class="panel-kicker">Pension</p>
-                  <h2>Private pension projection</h2>
-                </div>
-                <label class="section-toggle">
-                  <input id="includePension" type="checkbox" checked>
-                  <span>Include this section</span>
-                </label>
-              </div>
-              <p class="section-copy">
-                Project the future value of your pension pot using contributions plus compound growth.
-              </p>
-            </div>
-            <div class="field-grid two-up">
-              <label class="field">
-                <span>Current pension value</span>
-                <input id="pensionCurrent" type="number" min="0" step="1000" value="95000">
-              </label>
-              <label class="field">
-                <span>Expected annual return (%)</span>
-                <input id="pensionReturn" type="number" min="0" max="15" step="0.1" value="5">
-              </label>
-              <label class="field">
-                <span>Your monthly contribution</span>
-                <input id="pensionMonthlyEmployee" type="number" min="0" step="50" value="550">
-              </label>
-              <label class="field">
-                <span>Employer monthly contribution</span>
-                <input id="pensionMonthlyEmployer" type="number" min="0" step="50" value="350">
-              </label>
-            </div>
-          </section>
-
-          <section class="panel-card panel-card-half panel-card-aside" id="homeSection">
-            <div class="panel-heading">
-              <div class="panel-heading-top">
-                <div>
-                  <p class="panel-kicker">Home</p>
-                  <h2>Property and home equity</h2>
-                </div>
-                <label class="section-toggle">
-                  <input id="includeHome" type="checkbox" checked>
-                  <span>Include this section</span>
-                </label>
-              </div>
-              <p class="section-copy">
-                Use this only if you expect your home to contribute through selling, downsizing, or
-                releasing equity.
-              </p>
-            </div>
-            <div class="field-grid three-up">
-              <label class="field">
-                <span>Current home value</span>
-                <input id="homeValue" type="number" min="0" step="5000" value="425000">
-              </label>
-              <label class="field">
-                <span>Home value growth per year (%)</span>
-                <input id="homeGrowth" type="number" min="0" max="10" step="0.1" value="2.5">
-              </label>
-              <label class="field">
-                <span>Mortgage balance today</span>
-                <input id="mortgageBalance" type="number" min="0" step="1000" value="160000">
-              </label>
-              <label class="field">
-                <span>Mortgage interest rate (%)</span>
-                <input id="mortgageRate" type="number" min="0" max="20" step="0.1" value="4.2">
-              </label>
-              <label class="field">
-                <span>Years left on mortgage</span>
-                <input id="mortgageTermYears" type="number" min="0" max="40" step="1" value="22">
-              </label>
-              <label class="field full-width range-field">
-                <span>Home equity to use for retirement funding</span>
-                <div class="range-wrap">
-                  <input id="equityUsageRate" type="range" min="0" max="100" step="5" value="35">
-                  <strong id="equity-usage-label">35%</strong>
-                </div>
-                <small>Use this if you want to model downsizing, selling, or releasing some equity.</small>
-              </label>
-            </div>
-          </section>
+      <details class="planner-disclosure panel-card" id="pensionSection" open>
+        <summary class="planner-summary">
+          <div class="planner-summary-copy">
+            <p class="panel-kicker">Optional</p>
+            <h2>Private pension</h2>
+            <p>Add your pension pot and monthly contributions if you want it included in the plan.</p>
+          </div>
+          <div class="planner-summary-actions">
+            <label class="section-toggle">
+              <input id="includePension" type="checkbox" checked>
+              <span>Include this section</span>
+            </label>
+            <span class="planner-summary-indicator" aria-hidden="true">Show</span>
+          </div>
+        </summary>
+        <div class="planner-disclosure-body">
+          <div class="field-grid two-up compact-grid">
+            <label class="field">
+              <span>Current pension value</span>
+              <input id="pensionCurrent" type="number" min="0" step="1000" value="95000">
+            </label>
+            <label class="field">
+              <span>Expected annual return (%)</span>
+              <input id="pensionReturn" type="number" min="0" max="15" step="0.1" value="5">
+            </label>
+            <label class="field">
+              <span>Your monthly contribution</span>
+              <input id="pensionMonthlyEmployee" type="number" min="0" step="50" value="550">
+            </label>
+            <label class="field">
+              <span>Employer monthly contribution</span>
+              <input id="pensionMonthlyEmployer" type="number" min="0" step="50" value="350">
+            </label>
+          </div>
         </div>
-      </div>
+      </details>
 
-      <section class="panel-card panel-card-wide" id="otherAccountsSection">
-        <div class="panel-heading">
-          <div class="panel-heading-top">
-            <div>
-              <p class="panel-kicker">Other Accounts</p>
-              <h2>Cash ISA, Premium Bonds, HYSA, GIA and savings accounts</h2>
-            </div>
+      <details class="planner-disclosure panel-card" id="isaSection" open>
+        <summary class="planner-summary">
+          <div class="planner-summary-copy">
+            <p class="panel-kicker">Optional</p>
+            <h2>S&amp;S ISA</h2>
+            <p>Add your current ISA and monthly investing amount to estimate future tax-free value.</p>
+          </div>
+          <div class="planner-summary-actions">
+            <label class="section-toggle">
+              <input id="includeIsa" type="checkbox" checked>
+              <span>Include this section</span>
+            </label>
+            <span class="planner-summary-indicator" aria-hidden="true">Show</span>
+          </div>
+        </summary>
+        <div class="planner-disclosure-body">
+          <div class="field-grid three-up compact-grid">
+            <label class="field">
+              <span>Current ISA value</span>
+              <input id="isaCurrent" type="number" min="0" step="1000" value="40000">
+            </label>
+            <label class="field">
+              <span>Expected annual return (%)</span>
+              <input id="isaReturn" type="number" min="0" max="15" step="0.1" value="6">
+            </label>
+            <label class="field">
+              <span>Monthly ISA contribution</span>
+              <input id="isaMonthly" type="number" min="0" step="50" value="500">
+            </label>
+          </div>
+        </div>
+      </details>
+
+      <details class="planner-disclosure panel-card" id="homeSection" open>
+        <summary class="planner-summary">
+          <div class="planner-summary-copy">
+            <p class="panel-kicker">Optional</p>
+            <h2>Property and home equity</h2>
+            <p>Use this only if you expect your home to contribute through selling or releasing equity.</p>
+          </div>
+          <div class="planner-summary-actions">
+            <label class="section-toggle">
+              <input id="includeHome" type="checkbox" checked>
+              <span>Include this section</span>
+            </label>
+            <span class="planner-summary-indicator" aria-hidden="true">Show</span>
+          </div>
+        </summary>
+        <div class="planner-disclosure-body">
+          <div class="field-grid three-up compact-grid">
+            <label class="field">
+              <span>Current home value</span>
+              <input id="homeValue" type="number" min="0" step="5000" value="425000">
+            </label>
+            <label class="field">
+              <span>Home value growth per year (%)</span>
+              <input id="homeGrowth" type="number" min="0" max="10" step="0.1" value="2.5">
+            </label>
+            <label class="field">
+              <span>Mortgage balance today</span>
+              <input id="mortgageBalance" type="number" min="0" step="1000" value="160000">
+            </label>
+            <label class="field">
+              <span>Mortgage interest rate (%)</span>
+              <input id="mortgageRate" type="number" min="0" max="20" step="0.1" value="4.2">
+            </label>
+            <label class="field">
+              <span>Years left on mortgage</span>
+              <input id="mortgageTermYears" type="number" min="0" max="40" step="1" value="22">
+            </label>
+            <label class="field full-width range-field">
+              <span>Home equity to use for retirement funding</span>
+              <div class="range-wrap">
+                <input id="equityUsageRate" type="range" min="0" max="100" step="5" value="35">
+                <strong id="equity-usage-label">35%</strong>
+              </div>
+              <small>Use this if you want to model downsizing, selling, or releasing some equity.</small>
+            </label>
+          </div>
+        </div>
+      </details>
+
+      <details class="planner-disclosure panel-card" id="otherAccountsSection" open>
+        <summary class="planner-summary">
+          <div class="planner-summary-copy">
+            <p class="panel-kicker">Optional</p>
+            <h2>Other accounts</h2>
+            <p>Add cash ISA, Premium Bonds, HYSA, GIA, or any other savings accounts you want counted.</p>
+          </div>
+          <div class="planner-summary-actions">
             <label class="section-toggle">
               <input id="includeOtherAccounts" type="checkbox" checked>
               <span>Include this section</span>
             </label>
+            <span class="planner-summary-indicator" aria-hidden="true">Show</span>
           </div>
-          <p class="section-copy">
-            Add as many extra accounts as you want. Choose the account type from the dropdown, then
-            enter the current balance, monthly saving, and expected yearly rate.
-          </p>
+        </summary>
+        <div class="planner-disclosure-body">
+          <div class="savings-header">
+            <span>Account type</span>
+            <span>Current balance</span>
+            <span>Monthly saving</span>
+            <span>Yearly rate (%)</span>
+            <span></span>
+          </div>
+          <div class="savings-rows" id="savingsAccounts" aria-live="polite"></div>
+          <button class="secondary-button" id="addSavingsAccount" type="button">
+            Add another savings account
+          </button>
         </div>
-        <div class="savings-header">
-          <span>Account type</span>
-          <span>Current balance</span>
-          <span>Monthly saving</span>
-          <span>Yearly rate (%)</span>
-          <span></span>
-        </div>
-        <div class="savings-rows" id="savingsAccounts" aria-live="polite"></div>
-        <button class="secondary-button" id="addSavingsAccount" type="button">
-          Add another savings account
-        </button>
-      </section>
+      </details>
     </form>
 
     <aside class="results" id="resultsSection">
+      <section class="results-intro">
+        <p class="panel-kicker">Step Two</p>
+        <h2>Your retirement result</h2>
+        <p>This section is your answer area. Review the summary first, then use the breakdowns and charts underneath if you want more detail.</p>
+      </section>
+
       <section class="overview" aria-label="Retirement overview">
         <div class="overview-item">
           <span>Years to retirement</span>
