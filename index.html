@@ -142,8 +142,8 @@
         <summary class="planner-summary">
           <div class="planner-summary-copy">
             <p class="panel-kicker">Optional</p>
-            <h2>How cautious your investments become over time</h2>
-            <p>Use this if you want the planner to move gradually from more shares to more safer assets as retirement gets closer.</p>
+            <h2>Shares and safer assets</h2>
+            <p>Set the mix you want now, at retirement, and once retired.</p>
           </div>
           <div class="planner-summary-actions">
             <label class="section-toggle">
@@ -154,49 +154,27 @@
           </div>
         </summary>
         <div class="planner-disclosure-body">
-          <div class="timeline-explainer">
-            <div class="timeline-step">
-              <strong>Now</strong>
-              <p>`Shares now` is your current mix.</p>
-            </div>
-            <div class="timeline-step">
-              <strong>By retirement</strong>
-              <p>The planner gradually moves toward `Shares at retirement date` over your chosen final years before retirement.</p>
-            </div>
-            <div class="timeline-step">
-              <strong>Once retired</strong>
-              <p>At retirement, the model switches to `Shares once retired` for the drawdown calculation.</p>
-            </div>
-          </div>
           <div class="field-grid two-up">
             <label class="field">
               <span>Shares now (%)</span>
               <input id="equityAllocationNow" type="number" min="0" max="100" step="1" value="85">
             </label>
             <label class="field">
-              <span>Shares at retirement date (%)</span>
+              <span>Shares at retirement (%)</span>
               <input id="equityAllocationRetirement" type="number" min="0" max="100" step="1" value="55">
             </label>
             <label class="field">
-              <span>Shares once retired (%)</span>
+              <span>Shares after retirement (%)</span>
               <input id="equityAllocationDrawdown" type="number" min="0" max="100" step="1" value="40">
-              <div class="field-help">
-                <p>0% means all safer assets. 40% means 40% shares and 60% safer assets. 100% means everything stays in shares.</p>
-              </div>
             </label>
             <label class="field">
-              <span>Years before retirement to start moving to safer assets</span>
+              <span>Start moving to safer assets this many years before retirement</span>
               <input id="deriskingStartYears" type="number" min="0" max="30" step="1" value="10">
             </label>
             <label class="field full-width">
               <span>Expected return for safer assets (%)</span>
               <input id="defensiveReturn" type="number" min="0" max="10" step="0.1" value="2.5">
             </label>
-          </div>
-          <div class="inline-note">
-            <p><strong>What this affects:</strong> this only applies to invested pots such as your private pension, S&amp;S ISA, and any GIA.</p>
-            <p><strong>Simple rule:</strong> more shares means higher expected growth but more ups and downs. More safer assets means lower expected growth but a steadier plan.</p>
-            <p><strong>Important:</strong> this is still a simplified model. It derisks gradually before retirement, then makes a one-time switch to your <em>Shares once retired</em> setting at retirement.</p>
           </div>
         </div>
       </details>

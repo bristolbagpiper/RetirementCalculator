@@ -899,7 +899,7 @@ function updatePlanner() {
   const statePensionStartAge = includeStatePension ? readNumber("statePensionStartAge") : 67;
   const publicPensionIncome = includePublicPension ? readNumber("publicPensionIncome") : 0;
   const publicPensionStartAge = includePublicPension ? readNumber("publicPensionStartAge") : retirementAge;
-  const publicPensionLumpSum = includePublicPension ? readNumber("publicPensionLumpSum") : 0;
+  const publicPensionLumpSumInput = includePublicPension ? readNumber("publicPensionLumpSum") : 0;
   const otherGuaranteedIncome = includeOtherGuaranteedIncome ? readNumber("otherGuaranteedIncome") : 0;
 
   const pensionCurrent = includePension ? readNumber("pensionCurrent") : 0;
@@ -937,7 +937,7 @@ function updatePlanner() {
     includePublicPension,
     publicPensionIncome,
     publicPensionStartAge,
-    publicPensionLumpSum,
+    publicPensionLumpSum: publicPensionLumpSumInput,
     otherGuaranteedIncome,
     pensionCurrent,
     pensionReturn,
