@@ -90,8 +90,8 @@ h3 {
 .hero h1 {
   grid-column: 1 / span 8;
   margin-top: 0;
-  font-size: clamp(2.2rem, 4vw, 3.8rem);
-  line-height: 1;
+  font-size: clamp(2.8rem, 5vw, 4.6rem);
+  line-height: 0.96;
   max-width: none;
 }
 
@@ -106,6 +106,7 @@ h3 {
 
 .hero .eyebrow {
   grid-column: 1 / -1;
+  margin-bottom: 0.1rem;
 }
 
 .overview {
