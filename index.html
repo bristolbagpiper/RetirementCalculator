@@ -204,36 +204,6 @@
         </div>
       </section>
 
-      <section class="panel-card panel-card-wide" id="otherAccountsSection">
-        <div class="panel-heading">
-          <div class="panel-heading-top">
-            <div>
-              <p class="panel-kicker">Other Accounts</p>
-              <h2>Cash ISA, Premium Bonds, HYSA, GIA and savings accounts</h2>
-            </div>
-            <label class="section-toggle">
-              <input id="includeOtherAccounts" type="checkbox" checked>
-              <span>Include this section</span>
-            </label>
-          </div>
-          <p class="section-copy">
-            Add as many extra accounts as you want. Choose the account type from the dropdown, then
-            enter the current balance, monthly saving, and expected yearly rate.
-          </p>
-        </div>
-        <div class="savings-header">
-          <span>Account type</span>
-          <span>Current balance</span>
-          <span>Monthly saving</span>
-          <span>Yearly rate (%)</span>
-          <span></span>
-        </div>
-        <div class="savings-rows" id="savingsAccounts" aria-live="polite"></div>
-        <button class="secondary-button" id="addSavingsAccount" type="button">
-          Add another savings account
-        </button>
-      </section>
-
       <section class="panel-card panel-card-half panel-card-aside" id="homeSection">
         <div class="panel-heading">
           <div class="panel-heading-top">
@@ -281,6 +251,36 @@
             <small>Use this if you want to model downsizing, selling, or releasing some equity.</small>
           </label>
         </div>
+      </section>
+
+      <section class="panel-card panel-card-wide" id="otherAccountsSection">
+        <div class="panel-heading">
+          <div class="panel-heading-top">
+            <div>
+              <p class="panel-kicker">Other Accounts</p>
+              <h2>Cash ISA, Premium Bonds, HYSA, GIA and savings accounts</h2>
+            </div>
+            <label class="section-toggle">
+              <input id="includeOtherAccounts" type="checkbox" checked>
+              <span>Include this section</span>
+            </label>
+          </div>
+          <p class="section-copy">
+            Add as many extra accounts as you want. Choose the account type from the dropdown, then
+            enter the current balance, monthly saving, and expected yearly rate.
+          </p>
+        </div>
+        <div class="savings-header">
+          <span>Account type</span>
+          <span>Current balance</span>
+          <span>Monthly saving</span>
+          <span>Yearly rate (%)</span>
+          <span></span>
+        </div>
+        <div class="savings-rows" id="savingsAccounts" aria-live="polite"></div>
+        <button class="secondary-button" id="addSavingsAccount" type="button">
+          Add another savings account
+        </button>
       </section>
     </form>
 
