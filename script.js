@@ -28,11 +28,20 @@ const optionalSections = [
   { toggleId: "includeHome", containerId: "homeSection" },
 ];
 const optionalFields = [
-  { toggleId: "includeStatePension", containerId: "statePensionField", inputId: "statePensionIncome" },
+  {
+    toggleId: "includeStatePension",
+    containerId: "statePensionField",
+    inputIds: ["statePensionIncome", "statePensionStartAge"],
+  },
+  {
+    toggleId: "includePublicPension",
+    containerId: "publicPensionField",
+    inputIds: ["publicPensionIncome", "publicPensionStartAge", "publicPensionLumpSum"],
+  },
   {
     toggleId: "includeOtherGuaranteedIncome",
     containerId: "otherGuaranteedIncomeField",
-    inputId: "otherGuaranteedIncome",
+    inputIds: ["otherGuaranteedIncome"],
   },
 ];
 
@@ -87,12 +96,16 @@ const outputIds = {
   isaShare: "isa-share",
   savingsShare: "savings-share",
   homeShare: "home-share",
+  publicPensionLumpSumShare: "public-pension-lump-sum-share",
   pensionShareLabel: "pension-share-label",
+  publicPensionLumpSumShareLabel: "public-pension-lump-sum-share-label",
   isaShareLabel: "isa-share-label",
   savingsShareLabel: "savings-share-label",
   homeShareLabel: "home-share-label",
   drawdownIncome: "drawdown-income",
   statePensionIncomeOutput: "state-pension-income-output",
+  publicPensionIncomeOutput: "public-pension-income-output",
+  publicPensionLumpSumOutput: "public-pension-lump-sum-output",
   otherGuaranteedIncomeOutput: "other-guaranteed-income-output",
   totalIncomeOutput: "total-income-output",
   assumptionGrowth: "assumption-growth",
@@ -426,6 +439,35 @@ function isChecked(id) {
   return Boolean(field?.checked);
 }
 
+function getRetirementAgeAtProjection(inputs, yearsToRetirement) {
+  return inputs.currentAge + Math.max(0, yearsToRetirement);
+}
+
+function getGuaranteedBenefits(inputs, yearsToRetirement) {
+  const retirementAgeAtProjection = getRetirementAgeAtProjection(inputs, yearsToRetirement);
+  const statePensionIncome =
+    inputs.includeStatePension && retirementAgeAtProjection >= inputs.statePensionStartAge
+      ? inputs.statePensionIncome
+      : 0;
+  const publicPensionIncome =
+    inputs.includePublicPension && retirementAgeAtProjection >= inputs.publicPensionStartAge
+      ? inputs.publicPensionIncome
+      : 0;
+  const publicPensionLumpSum =
+    inputs.includePublicPension && retirementAgeAtProjection >= inputs.publicPensionStartAge
+      ? inputs.publicPensionLumpSum
+      : 0;
+  const otherGuaranteedIncome = inputs.otherGuaranteedIncome;
+
+  return {
+    statePensionIncome,
+    publicPensionIncome,
+    publicPensionLumpSum,
+    otherGuaranteedIncome,
+    guaranteedIncomeTotal: statePensionIncome + publicPensionIncome + otherGuaranteedIncome,
+  };
+}
+
 function syncOptionalUi() {
   optionalSections.forEach(({ toggleId, containerId }) => {
     const enabled = isChecked(toggleId);
@@ -444,16 +486,20 @@ function syncOptionalUi() {
     });
   });
 
-  optionalFields.forEach(({ toggleId, containerId, inputId }) => {
+  optionalFields.forEach(({ toggleId, containerId, inputIds }) => {
     const enabled = isChecked(toggleId);
     const container = document.getElementById(containerId);
-    const input = document.getElementById(inputId);
-    if (!container || !input) {
+    if (!container) {
       return;
     }
 
     container.classList.toggle("is-disabled", !enabled);
-    input.disabled = !enabled;
+    inputIds.forEach((inputId) => {
+      const input = document.getElementById(inputId);
+      if (input) {
+        input.disabled = !enabled;
+      }
+    });
   });
 }
 
@@ -472,6 +518,7 @@ function calculateProjection(inputs, yearsToRetirement) {
     (month) => getPreRetirementBlendedRate(inputs.isaReturn, month, yearsToRetirement, inputs)
   );
 
+  const guaranteedBenefits = getGuaranteedBenefits(inputs, yearsToRetirement);
   const savingsProjection = inputs.includeOtherAccounts
     ? calculateSavingsProjection(yearsToRetirement, inputs)
     : { total: 0, drawdownRate: 0 };
@@ -486,15 +533,21 @@ function calculateProjection(inputs, yearsToRetirement) {
   const homeEquityFuture = Math.max(0, homeValueFuture - projectedMortgageBalance);
   const usableHomeEquity = homeEquityFuture * (inputs.equityUsageRate / 100);
 
-  const projectedNetWorth = pensionFuture + isaFuture + savingsFuture + homeEquityFuture;
+  const projectedNetWorth =
+    guaranteedBenefits.publicPensionLumpSum + pensionFuture + isaFuture + savingsFuture + homeEquityFuture;
   const futureSpendingTarget =
     inputs.targetSpending * Math.pow(1 + inputs.inflationRate / 100, Math.max(0, yearsToRetirement));
-  const accessibleAssets = isaFuture + savingsFuture + usableHomeEquity;
+  const accessibleAssets =
+    guaranteedBenefits.publicPensionLumpSum + isaFuture + savingsFuture + usableHomeEquity;
   const drawdownIncome = accessibleAssets * (inputs.withdrawalRate / 100);
-  const estimatedIncome = drawdownIncome + inputs.guaranteedIncome;
+  const estimatedIncome = drawdownIncome + guaranteedBenefits.guaranteedIncomeTotal;
   const incomeGap = estimatedIncome - futureSpendingTarget;
 
   return {
+    publicPensionLumpSum: guaranteedBenefits.publicPensionLumpSum,
+    statePensionIncome: guaranteedBenefits.statePensionIncome,
+    publicPensionIncome: guaranteedBenefits.publicPensionIncome,
+    otherGuaranteedIncome: guaranteedBenefits.otherGuaranteedIncome,
     pensionFuture,
     isaFuture,
     savingsFuture,
@@ -536,6 +589,7 @@ function buildGrowthChartData(inputs, currentAge, yearsToRetirement) {
     series.push({
       label: `Age ${currentAge + year}`,
       values: [
+        { key: "Public/DB lump sum", value: projection.publicPensionLumpSum, color: "#8f67d8" },
         { key: "Pension", value: projection.pensionFuture, color: "#3e82f7" },
         { key: "S&S ISA", value: projection.isaFuture, color: "#f0a13a" },
         { key: "Other accounts", value: projection.savingsFuture, color: "#7f8cf6" },
@@ -550,6 +604,7 @@ function buildGrowthChartData(inputs, currentAge, yearsToRetirement) {
     summary: "Stacked bars show how each part of your net worth builds up between now and retirement.",
     description: "Hover the bars to inspect how your plan grows between now and retirement.",
     legend: [
+      { label: "Public/DB lump sum", color: "#8f67d8" },
       { label: "Pension", color: "#3e82f7" },
       { label: "S&S ISA", color: "#f0a13a" },
       { label: "Other accounts", color: "#7f8cf6" },
@@ -612,11 +667,13 @@ function buildContributionChartData(inputs, currentAge, yearsToRetirement) {
 function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement) {
   const maxYears = 25;
   const withdrawalBase =
-    (retirementProjection.isaFuture +
+    (retirementProjection.publicPensionLumpSum +
+      retirementProjection.isaFuture +
       retirementProjection.savingsFuture +
       retirementProjection.usableHomeEquity) *
     (inputs.withdrawalRate / 100);
 
+  let publicPensionLumpSumBalance = retirementProjection.publicPensionLumpSum;
   let isaBalance = retirementProjection.isaFuture;
   let savingsBalance = retirementProjection.savingsFuture;
   let homeCashBalance = retirementProjection.usableHomeEquity;
@@ -624,7 +681,7 @@ function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement)
 
   for (let year = 0; year <= maxYears; year += 1) {
     const age = inputs.retirementAge + year;
-    const openingBalance = isaBalance + savingsBalance + homeCashBalance;
+    const openingBalance = publicPensionLumpSumBalance + isaBalance + savingsBalance + homeCashBalance;
     const withdrawal = withdrawalBase * Math.pow(1 + inputs.inflationRate / 100, year);
 
     series.push({
@@ -641,10 +698,12 @@ function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement)
     const plannedWithdrawal = Math.min(openingBalance, withdrawal);
     const totalBeforeWithdrawal = Math.max(openingBalance, 1);
 
+    publicPensionLumpSumBalance -= plannedWithdrawal * (publicPensionLumpSumBalance / totalBeforeWithdrawal);
     isaBalance -= plannedWithdrawal * (isaBalance / totalBeforeWithdrawal);
     savingsBalance -= plannedWithdrawal * (savingsBalance / totalBeforeWithdrawal);
     homeCashBalance -= plannedWithdrawal * (homeCashBalance / totalBeforeWithdrawal);
 
+    publicPensionLumpSumBalance = Math.max(0, publicPensionLumpSumBalance);
     isaBalance = Math.max(0, isaBalance * (1 + retirementProjection.isaDrawdownRate / 100));
     savingsBalance = Math.max(0, savingsBalance * (1 + retirementProjection.savingsDrawdownRate / 100));
     homeCashBalance = Math.max(0, homeCashBalance);
@@ -825,6 +884,7 @@ function updatePlanner() {
   const deriskingStartYears = readNumber("deriskingStartYears");
   const defensiveReturn = readNumber("defensiveReturn");
   const includeStatePension = isChecked("includeStatePension");
+  const includePublicPension = isChecked("includePublicPension");
   const includeOtherGuaranteedIncome = isChecked("includeOtherGuaranteedIncome");
   const includePension = isChecked("includePension");
   const includeIsa = isChecked("includeIsa");
@@ -832,8 +892,11 @@ function updatePlanner() {
   const includeHome = isChecked("includeHome");
 
   const statePensionIncome = includeStatePension ? readNumber("statePensionIncome") : 0;
+  const statePensionStartAge = includeStatePension ? readNumber("statePensionStartAge") : 67;
+  const publicPensionIncome = includePublicPension ? readNumber("publicPensionIncome") : 0;
+  const publicPensionStartAge = includePublicPension ? readNumber("publicPensionStartAge") : retirementAge;
+  const publicPensionLumpSum = includePublicPension ? readNumber("publicPensionLumpSum") : 0;
   const otherGuaranteedIncome = includeOtherGuaranteedIncome ? readNumber("otherGuaranteedIncome") : 0;
-  const guaranteedIncome = statePensionIncome + otherGuaranteedIncome;
 
   const pensionCurrent = includePension ? readNumber("pensionCurrent") : 0;
   const pensionReturn = includePension ? readNumber("pensionReturn") : 0;
@@ -853,6 +916,7 @@ function updatePlanner() {
 
   const yearsToRetirement = Math.max(0, retirementAge - currentAge);
   const inputs = {
+    currentAge,
     retirementAge,
     targetSpending,
     inflationRate,
@@ -863,7 +927,14 @@ function updatePlanner() {
     equityAllocationDrawdown,
     deriskingStartYears,
     defensiveReturn,
-    guaranteedIncome,
+    includeStatePension,
+    statePensionIncome,
+    statePensionStartAge,
+    includePublicPension,
+    publicPensionIncome,
+    publicPensionStartAge,
+    publicPensionLumpSum,
+    otherGuaranteedIncome,
     pensionCurrent,
     pensionReturn,
     pensionMonthlyTotal: pensionMonthlyEmployee + pensionMonthlyEmployer,
@@ -881,6 +952,10 @@ function updatePlanner() {
 
   const projection = calculateProjection(inputs, yearsToRetirement);
   const {
+    publicPensionLumpSum,
+    statePensionIncome: statePensionIncomeAtRetirement,
+    publicPensionIncome: publicPensionIncomeAtRetirement,
+    otherGuaranteedIncome: otherGuaranteedIncomeAtRetirement,
     pensionFuture,
     isaFuture,
     savingsFuture,
@@ -893,6 +968,8 @@ function updatePlanner() {
     incomeGap,
   } = projection;
 
+  const publicPensionLumpSumShare =
+    projectedNetWorth > 0 ? (publicPensionLumpSum / projectedNetWorth) * 100 : 0;
   const pensionShare = projectedNetWorth > 0 ? (pensionFuture / projectedNetWorth) * 100 : 0;
   const isaShare = projectedNetWorth > 0 ? (isaFuture / projectedNetWorth) * 100 : 0;
   const savingsShare = projectedNetWorth > 0 ? (savingsFuture / projectedNetWorth) * 100 : 0;
@@ -960,6 +1037,7 @@ function updatePlanner() {
     );
   }
 
+  setText(outputIds.publicPensionLumpSumOutput, formatCurrency(publicPensionLumpSum));
   setText(outputIds.pensionFutureValue, formatCurrency(pensionFuture));
   setText(outputIds.isaFutureValue, formatCurrency(isaFuture));
   setText(outputIds.savingsFutureValue, formatCurrency(savingsFuture));
@@ -988,19 +1066,22 @@ function updatePlanner() {
       : `Your projected income is about ${formatCurrency(Math.abs(incomeGap))} below your target.`
   );
 
+  setWidth(outputIds.publicPensionLumpSumShare, publicPensionLumpSumShare);
   setWidth(outputIds.pensionShare, pensionShare);
   setWidth(outputIds.isaShare, isaShare);
   setWidth(outputIds.savingsShare, savingsShare);
   setWidth(outputIds.homeShare, homeShare);
 
+  setText(outputIds.publicPensionLumpSumShareLabel, formatPercent(publicPensionLumpSumShare));
   setText(outputIds.pensionShareLabel, formatPercent(pensionShare));
   setText(outputIds.isaShareLabel, formatPercent(isaShare));
   setText(outputIds.savingsShareLabel, formatPercent(savingsShare));
   setText(outputIds.homeShareLabel, formatPercent(homeShare));
 
   setText(outputIds.drawdownIncome, formatCurrency(drawdownIncome));
-  setText(outputIds.statePensionIncomeOutput, formatCurrency(statePensionIncome));
-  setText(outputIds.otherGuaranteedIncomeOutput, formatCurrency(otherGuaranteedIncome));
+  setText(outputIds.statePensionIncomeOutput, formatCurrency(statePensionIncomeAtRetirement));
+  setText(outputIds.publicPensionIncomeOutput, formatCurrency(publicPensionIncomeAtRetirement));
+  setText(outputIds.otherGuaranteedIncomeOutput, formatCurrency(otherGuaranteedIncomeAtRetirement));
   setText(outputIds.totalIncomeOutput, formatCurrency(estimatedIncome));
 
   if (includeAssetMix) {
@@ -1018,7 +1099,7 @@ function updatePlanner() {
   }
   setText(
     outputIds.assumptionInflation,
-    `Your ${formatCurrency(targetSpending)} target is inflated by ${inflationRate}% for ${yearsToRetirement} years.`
+    `Your ${formatCurrency(targetSpending)} target is inflated by ${inflationRate}% for ${yearsToRetirement} years. State pension starts at ${statePensionStartAge}, and public/DB pension starts at ${publicPensionStartAge}.`
   );
   setText(
     outputIds.assumptionEquity,

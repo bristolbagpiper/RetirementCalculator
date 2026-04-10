@@ -31,8 +31,8 @@
           <p class="section-copy">
             Start with the age you want to stop working and the amount you think you will need each
             year in retirement, entered in today&apos;s money. Private pensions go in the section
-            below as investment pots. State or public pensions go here because they behave like
-            yearly income, not a pot you draw from.
+            below as investment pots. State pension and public or defined-benefit pensions are
+            separate here because they can start at different ages and may include a lump sum.
           </p>
         </div>
         <div class="field-grid three-up">
@@ -68,13 +68,45 @@
           </label>
           <div class="field optional-field" id="statePensionField">
             <div class="field-top">
-              <span>State or public pension income per year</span>
+              <span>State pension</span>
               <label class="mini-toggle">
                 <input id="includeStatePension" type="checkbox" checked>
                 <span>Include</span>
               </label>
             </div>
-            <input id="statePensionIncome" type="number" min="0" step="1000" value="12000">
+            <div class="subfield-grid two-up">
+              <label class="field">
+                <span>Income per year</span>
+                <input id="statePensionIncome" type="number" min="0" step="1000" value="12000">
+              </label>
+              <label class="field">
+                <span>Starts at age</span>
+                <input id="statePensionStartAge" type="number" min="55" max="90" step="1" value="67">
+              </label>
+            </div>
+          </div>
+          <div class="field optional-field" id="publicPensionField">
+            <div class="field-top">
+              <span>Public or DB pension</span>
+              <label class="mini-toggle">
+                <input id="includePublicPension" type="checkbox">
+                <span>Include</span>
+              </label>
+            </div>
+            <div class="subfield-grid three-up">
+              <label class="field">
+                <span>Income per year</span>
+                <input id="publicPensionIncome" type="number" min="0" step="1000" value="0">
+              </label>
+              <label class="field">
+                <span>Starts at age</span>
+                <input id="publicPensionStartAge" type="number" min="40" max="90" step="1" value="60">
+              </label>
+              <label class="field">
+                <span>Lump sum at start</span>
+                <input id="publicPensionLumpSum" type="number" min="0" step="1000" value="0">
+              </label>
+            </div>
           </div>
           <div class="field optional-field" id="otherGuaranteedIncomeField">
             <div class="field-top">
@@ -115,8 +147,11 @@
               <input id="equityAllocationRetirement" type="number" min="0" max="100" step="1" value="55">
             </label>
             <label class="field">
-              <span>Equity allocation during drawdown (%)</span>
+              <span>Shares kept invested after you retire (%)</span>
               <input id="equityAllocationDrawdown" type="number" min="0" max="100" step="1" value="40">
+              <div class="field-help">
+                <p>0% means none in shares. 40% means 40% in shares and 60% in lower-risk assets. 100% means everything stays in shares.</p>
+              </div>
             </label>
             <label class="field">
               <span>Years before retirement to start derisking</span>
@@ -128,7 +163,7 @@
             </label>
           </div>
           <div class="inline-note">
-            <p><strong>How drawdown works here:</strong> after retirement, the planner uses your chosen drawdown equity mix to estimate growth on your ISA and any GIA-style investments.</p>
+            <p><strong>What this changes:</strong> after retirement, the planner uses this split to estimate how fast your invested money might keep growing while you are taking withdrawals.</p>
             <p>Your yearly drawdown income is based on your ISA, other accounts, and chosen home equity. Private pensions are currently not included in that drawdown figure.</p>
           </div>
         </div>
@@ -350,6 +385,10 @@
           <p class="panel-kicker">How This Was Calculated</p>
           <h3>Projected balances at retirement</h3>
           <div class="results-row">
+            <span>Public/DB pension lump sum</span>
+            <strong id="public-pension-lump-sum-output">&pound;0</strong>
+          </div>
+          <div class="results-row">
             <span>Pension pot</span>
             <strong id="pension-future-value">&pound;0</strong>
           </div>
@@ -374,12 +413,16 @@
         <section class="results-card">
           <h3>Income estimate</h3>
           <div class="results-row">
-            <span>Drawdown from ISA, other accounts and home equity</span>
+            <span>Drawdown from non-pension assets</span>
             <strong id="drawdown-income">&pound;0</strong>
           </div>
           <div class="results-row">
-            <span>State/public pension income</span>
+            <span>State pension income at retirement</span>
             <strong id="state-pension-income-output">&pound;0</strong>
+          </div>
+          <div class="results-row">
+            <span>Public/DB pension income at retirement</span>
+            <strong id="public-pension-income-output">&pound;0</strong>
           </div>
           <div class="results-row">
             <span>Other guaranteed income</span>
@@ -393,6 +436,13 @@
 
         <section class="results-card">
           <h3>Net worth mix</h3>
+          <div class="mix-group">
+            <div class="mix-label">
+              <span>Public/DB lump sum</span>
+              <strong id="public-pension-lump-sum-share-label">0%</strong>
+            </div>
+            <div class="stack-bar"><span class="bar-fill public-pension-fill" id="public-pension-lump-sum-share"></span></div>
+          </div>
           <div class="mix-group">
             <div class="mix-label">
               <span>Pension</span>

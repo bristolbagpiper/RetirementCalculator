@@ -10,6 +10,7 @@
   --accent: #2768c9;
   --accent-strong: #174a91;
   --accent-soft: #edf4ff;
+  --public-pension: #8f67d8;
   --pension: #3e82f7;
   --isa: #f0a13a;
   --home: #2fa67f;
@@ -320,6 +321,11 @@ h3 {
 .field-grid {
   display: grid;
   gap: 0.7rem 0.8rem;
+}
+
+.subfield-grid {
+  display: grid;
+  gap: 0.65rem 0.75rem;
 }
 
 .two-up {
@@ -748,6 +754,10 @@ input[type="range"] {
   background: var(--pension);
 }
 
+.public-pension-fill {
+  background: var(--public-pension);
+}
+
 .isa-fill {
   background: var(--isa);
 }
@@ -1049,6 +1059,7 @@ input[type="range"] {
   }
 
   .compact-grid,
+  .subfield-grid,
   .three-up {
     grid-template-columns: 1fr;
   }
