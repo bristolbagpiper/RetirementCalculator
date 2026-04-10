@@ -12,6 +12,7 @@ const planner = document.querySelector("[data-planner]");
 const savingsAccounts = document.getElementById("savingsAccounts");
 const savingsTemplate = document.getElementById("savingsAccountTemplate");
 const addSavingsAccountButton = document.getElementById("addSavingsAccount");
+const resetPlannerButton = document.getElementById("resetPlanner");
 const withdrawalRateInput = document.getElementById("withdrawalRate");
 const withdrawalPresetButtons = Array.from(document.querySelectorAll(".rate-preset"));
 const chartModeButtons = Array.from(document.querySelectorAll("[data-chart-mode]"));
@@ -169,6 +170,11 @@ const outputIds = {
 const chartState = {
   mode: "growth",
 };
+const PLANNER_STORAGE_KEY = "can-i-retire-yet-planner-state-v1";
+const DEFAULT_SAVINGS_ROWS = [
+  { type: "cash_isa", balance: 20000, monthly: 150, rate: 3.5, inflationLinked: false },
+  { type: "premium_bonds", balance: 10000, monthly: 50, rate: 4.0, inflationLinked: false },
+];
 
 function readNumber(id) {
   const field = document.getElementById(id);
@@ -193,6 +199,109 @@ function setHidden(id, hidden) {
   const node = document.getElementById(id);
   if (node) {
     node.hidden = hidden;
+  }
+}
+
+function getPlannableFields() {
+  return Array.from(planner.querySelectorAll("input, select, textarea"));
+}
+
+function captureFieldState() {
+  return getPlannableFields().reduce((state, field) => {
+    if (!field.id) {
+      return state;
+    }
+
+    state[field.id] =
+      field.type === "checkbox" || field.type === "radio" ? Boolean(field.checked) : field.value;
+    return state;
+  }, {});
+}
+
+function applyFieldState(fieldState = {}) {
+  Object.entries(fieldState).forEach(([id, value]) => {
+    const field = document.getElementById(id);
+    if (!field) {
+      return;
+    }
+
+    if (field.type === "checkbox" || field.type === "radio") {
+      field.checked = Boolean(value);
+    } else {
+      field.value = value;
+    }
+  });
+}
+
+function captureDisclosureState() {
+  return Array.from(planner.querySelectorAll(".planner-disclosure[id]")).reduce((state, disclosure) => {
+    state[disclosure.id] = disclosure.open;
+    return state;
+  }, {});
+}
+
+function applyDisclosureState(disclosureState = {}) {
+  Object.entries(disclosureState).forEach(([id, open]) => {
+    const disclosure = document.getElementById(id);
+    if (disclosure?.tagName === "DETAILS") {
+      disclosure.open = Boolean(open);
+    }
+  });
+}
+
+function getSavingsRowState() {
+  return getSavingsRows().map((row) => ({
+    type: row.querySelector(".savings-type")?.value || "cash_isa",
+    balance: Number(row.querySelector(".savings-balance")?.value) || 0,
+    monthly: Number(row.querySelector(".savings-monthly")?.value) || 0,
+    rate: Number(row.querySelector(".savings-rate")?.value) || 0,
+    inflationLinked: Boolean(row.querySelector(".savings-inflation-linked")?.checked),
+  }));
+}
+
+function applySavingsRowState(rows = []) {
+  savingsAccounts.innerHTML = "";
+  const nextRows = rows.length ? rows : DEFAULT_SAVINGS_ROWS;
+  nextRows.forEach((row) => createSavingsRow(row));
+}
+
+function setChartMode(mode) {
+  chartState.mode = mode || "growth";
+  chartModeButtons.forEach((candidate) => {
+    candidate.classList.toggle("is-active", candidate.dataset.chartMode === chartState.mode);
+  });
+}
+
+function savePlannerState() {
+  try {
+    const payload = {
+      fields: captureFieldState(),
+      savingsRows: getSavingsRowState(),
+      disclosures: captureDisclosureState(),
+      chartMode: chartState.mode,
+    };
+
+    window.localStorage.setItem(PLANNER_STORAGE_KEY, JSON.stringify(payload));
+  } catch (error) {
+    // Ignore localStorage failures and keep the planner usable.
+  }
+}
+
+function loadPlannerState() {
+  try {
+    const raw = window.localStorage.getItem(PLANNER_STORAGE_KEY);
+    if (!raw) {
+      return false;
+    }
+
+    const payload = JSON.parse(raw);
+    applyFieldState(payload.fields);
+    applySavingsRowState(payload.savingsRows);
+    applyDisclosureState(payload.disclosures);
+    setChartMode(payload.chartMode);
+    return true;
+  } catch (error) {
+    return false;
   }
 }
 
@@ -1590,10 +1699,17 @@ function updatePlanner() {
 
   const chartModel = buildChartModel(inputs, currentAge, yearsToRetirement, projection);
   renderInteractiveChart(chartModel);
+  savePlannerState();
 }
 
-createSavingsRow({ type: "cash_isa", balance: 20000, monthly: 150, rate: 3.5 });
-createSavingsRow({ type: "premium_bonds", balance: 10000, monthly: 50, rate: 4.0 });
+applySavingsRowState(DEFAULT_SAVINGS_ROWS);
+const defaultPlannerState = {
+  fields: captureFieldState(),
+  savingsRows: getSavingsRowState(),
+  disclosures: captureDisclosureState(),
+  chartMode: chartState.mode,
+};
+loadPlannerState();
 
 addSavingsAccountButton.addEventListener("click", () => {
   createSavingsRow();
@@ -1609,10 +1725,7 @@ withdrawalPresetButtons.forEach((button) => {
 
 chartModeButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    chartState.mode = button.dataset.chartMode || "growth";
-    chartModeButtons.forEach((candidate) => {
-      candidate.classList.toggle("is-active", candidate === button);
-    });
+    setChartMode(button.dataset.chartMode || "growth");
     updatePlanner();
   });
 });
@@ -1632,6 +1745,20 @@ plannerSummaryToggles.forEach((toggle) => {
   toggle.addEventListener("click", (event) => {
     event.stopPropagation();
   });
+});
+
+resetPlannerButton?.addEventListener("click", () => {
+  try {
+    window.localStorage.removeItem(PLANNER_STORAGE_KEY);
+  } catch (error) {
+    // Ignore localStorage failures and still restore defaults in-memory.
+  }
+
+  applyFieldState(defaultPlannerState.fields);
+  applySavingsRowState(defaultPlannerState.savingsRows);
+  applyDisclosureState(defaultPlannerState.disclosures);
+  setChartMode(defaultPlannerState.chartMode);
+  updatePlanner();
 });
 
 updatePlanner();

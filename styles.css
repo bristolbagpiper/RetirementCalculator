@@ -751,6 +751,12 @@ h3 {
   padding: 0.7rem 0.95rem;
 }
 
+.secondary-button-quiet {
+  margin-top: 0;
+  padding-inline: 0.9rem;
+  white-space: nowrap;
+}
+
 .remove-button {
   padding: 0.7rem 0.95rem;
   align-self: stretch;
