@@ -95,6 +95,10 @@ const UK_TAX_PROFILES = {
     cgtAllowance: 3000,
   },
 };
+const UK_PERSONAL_ALLOWANCE = 12570;
+const UK_ALLOWANCE_TAPER_START = 100000;
+const UK_BASIC_RATE_BAND = 37700;
+const UK_HIGHER_RATE_BAND = 74870;
 
 const outputIds = {
   yearsToRetirement: "years-to-retirement",
@@ -149,6 +153,8 @@ const outputIds = {
   publicPensionIncomeOutput: "public-pension-income-output",
   publicPensionLumpSumOutput: "public-pension-lump-sum-output",
   otherGuaranteedIncomeOutput: "other-guaranteed-income-output",
+  grossIncomeOutput: "gross-income-output",
+  incomeTaxOutput: "income-tax-output",
   totalIncomeOutput: "total-income-output",
   assumptionGrowth: "assumption-growth",
   assumptionInflation: "assumption-inflation",
@@ -451,6 +457,28 @@ function getEstimatedNetSavingsRate(type, rate, taxProfile, includeTaxEstimate) 
   }
 
   return rate;
+}
+
+function calculateUkIncomeTax(taxableIncome) {
+  const income = Math.max(0, taxableIncome);
+  const taperedAllowanceReduction = Math.max(0, income - UK_ALLOWANCE_TAPER_START) / 2;
+  const personalAllowance = Math.max(0, UK_PERSONAL_ALLOWANCE - taperedAllowanceReduction);
+  let taxableAfterAllowance = Math.max(0, income - personalAllowance);
+  let tax = 0;
+
+  const basicSlice = Math.min(taxableAfterAllowance, UK_BASIC_RATE_BAND);
+  tax += basicSlice * 0.2;
+  taxableAfterAllowance -= basicSlice;
+
+  const higherSlice = Math.min(taxableAfterAllowance, UK_HIGHER_RATE_BAND);
+  tax += higherSlice * 0.4;
+  taxableAfterAllowance -= higherSlice;
+
+  if (taxableAfterAllowance > 0) {
+    tax += taxableAfterAllowance * 0.45;
+  }
+
+  return tax;
 }
 
 function blendedReturn(growthReturn, defensiveReturn, equityAllocation) {
@@ -782,13 +810,33 @@ function simulateBalancesToAge(inputs, retirementProjection, targetAge) {
 function calculateIncomeAtAge(inputs, retirementProjection, targetAge) {
   const balances = simulateBalancesToAge(inputs, retirementProjection, targetAge);
   const guaranteedBenefits = getGuaranteedBenefits(inputs, Math.max(0, targetAge - inputs.currentAge));
-  const drawdownIncome = balances.accessibleAssets * (inputs.withdrawalRate / 100);
-  const estimatedIncome = drawdownIncome + guaranteedBenefits.guaranteedIncomeTotal;
+  const pensionDrawdownIncome = balances.pensionBalance * (inputs.withdrawalRate / 100);
+  const publicPensionLumpSumDrawdownIncome = balances.publicPensionLumpSumBalance * (inputs.withdrawalRate / 100);
+  const isaDrawdownIncome = balances.isaBalance * (inputs.withdrawalRate / 100);
+  const savingsDrawdownIncome = balances.savingsBalance * (inputs.withdrawalRate / 100);
+  const homeEquityDrawdownIncome = balances.homeCashBalance * (inputs.withdrawalRate / 100);
+  const drawdownIncome =
+    pensionDrawdownIncome +
+    publicPensionLumpSumDrawdownIncome +
+    isaDrawdownIncome +
+    savingsDrawdownIncome +
+    homeEquityDrawdownIncome;
+  const grossEstimatedIncome = drawdownIncome + guaranteedBenefits.guaranteedIncomeTotal;
+  const taxablePensionDrawdownIncome = pensionDrawdownIncome * (1 - inputs.pensionTaxFreePercent / 100);
+  const taxableRetirementIncome =
+    taxablePensionDrawdownIncome +
+    guaranteedBenefits.statePensionIncome +
+    guaranteedBenefits.publicPensionIncome +
+    guaranteedBenefits.otherGuaranteedIncome;
+  const retirementIncomeTax = inputs.includeTaxEstimate ? calculateUkIncomeTax(taxableRetirementIncome) : 0;
+  const estimatedIncome = grossEstimatedIncome - retirementIncomeTax;
   const futureSpendingTarget =
     inputs.targetSpending * Math.pow(1 + inputs.inflationRate / 100, Math.max(0, targetAge - inputs.currentAge));
 
   return {
     drawdownIncome,
+    grossEstimatedIncome,
+    retirementIncomeTax,
     estimatedIncome,
     accessibleAssets: balances.accessibleAssets,
     guaranteedIncomeTotal: guaranteedBenefits.guaranteedIncomeTotal,
@@ -882,8 +930,26 @@ function calculateProjection(inputs, yearsToRetirement) {
     inputs.targetSpending * Math.pow(1 + inputs.inflationRate / 100, Math.max(0, yearsToRetirement));
   const accessibleAssets =
     pensionFuture + guaranteedBenefits.publicPensionLumpSum + isaFuture + savingsFuture + usableHomeEquity;
-  const drawdownIncome = accessibleAssets * (inputs.withdrawalRate / 100);
-  const estimatedIncome = drawdownIncome + guaranteedBenefits.guaranteedIncomeTotal;
+  const pensionDrawdownIncome = pensionFuture * (inputs.withdrawalRate / 100);
+  const publicPensionLumpSumDrawdownIncome = guaranteedBenefits.publicPensionLumpSum * (inputs.withdrawalRate / 100);
+  const isaDrawdownIncome = isaFuture * (inputs.withdrawalRate / 100);
+  const savingsDrawdownIncome = savingsFuture * (inputs.withdrawalRate / 100);
+  const homeEquityDrawdownIncome = usableHomeEquity * (inputs.withdrawalRate / 100);
+  const drawdownIncome =
+    pensionDrawdownIncome +
+    publicPensionLumpSumDrawdownIncome +
+    isaDrawdownIncome +
+    savingsDrawdownIncome +
+    homeEquityDrawdownIncome;
+  const grossEstimatedIncome = drawdownIncome + guaranteedBenefits.guaranteedIncomeTotal;
+  const taxablePensionDrawdownIncome = pensionDrawdownIncome * (1 - inputs.pensionTaxFreePercent / 100);
+  const taxableRetirementIncome =
+    taxablePensionDrawdownIncome +
+    guaranteedBenefits.statePensionIncome +
+    guaranteedBenefits.publicPensionIncome +
+    guaranteedBenefits.otherGuaranteedIncome;
+  const retirementIncomeTax = inputs.includeTaxEstimate ? calculateUkIncomeTax(taxableRetirementIncome) : 0;
+  const estimatedIncome = grossEstimatedIncome - retirementIncomeTax;
   const incomeGap = estimatedIncome - futureSpendingTarget;
 
   return {
@@ -900,6 +966,8 @@ function calculateProjection(inputs, yearsToRetirement) {
     futureSpendingTarget,
     accessibleAssets,
     drawdownIncome,
+    grossEstimatedIncome,
+    retirementIncomeTax,
     estimatedIncome,
     incomeGap,
     guaranteedIncomeTotal: guaranteedBenefits.guaranteedIncomeTotal,
@@ -1247,7 +1315,7 @@ function updatePlanner() {
   const includeIsa = isChecked("includeIsa");
   const includeOtherAccounts = isChecked("includeOtherAccounts");
   const includeHome = isChecked("includeHome");
-  const includeTaxEstimate = includeOtherAccounts && isChecked("includeTaxEstimate");
+  const includeTaxEstimate = isChecked("includeTaxEstimate");
   const taxBand = document.getElementById("taxBand")?.value || "basic";
 
   const statePensionIncome = includeStatePension ? readNumber("statePensionIncome") : 0;
@@ -1262,6 +1330,7 @@ function updatePlanner() {
   const pensionMonthlyEmployee = includePension ? readNumber("pensionMonthlyEmployee") : 0;
   const pensionMonthlyEmployer = includePension ? readNumber("pensionMonthlyEmployer") : 0;
   const pensionContributionInflation = includePension && isChecked("pensionContributionInflation");
+  const pensionTaxFreePercent = includePension ? readNumber("pensionTaxFreePercent") : 25;
 
   const isaCurrent = includeIsa ? readNumber("isaCurrent") : 0;
   const isaReturn = includeIsa ? readNumber("isaReturn") : 0;
@@ -1299,6 +1368,7 @@ function updatePlanner() {
     pensionReturn,
     pensionMonthlyTotal: pensionMonthlyEmployee + pensionMonthlyEmployer,
     pensionContributionInflation,
+    pensionTaxFreePercent,
     isaCurrent,
     isaReturn,
     isaMonthly,
@@ -1328,6 +1398,8 @@ function updatePlanner() {
     projectedNetWorth,
     futureSpendingTarget,
     drawdownIncome,
+    grossEstimatedIncome,
+    retirementIncomeTax,
     estimatedIncome,
     incomeGap,
   } = projection;
@@ -1354,15 +1426,15 @@ function updatePlanner() {
   setText(
     outputIds.incomeGapNote,
     incomeGap >= 0
-      ? "Your projected yearly income is above your target."
-      : "Your projected yearly income is below your target."
+      ? "Your projected after-tax yearly income is above your target."
+      : "Your projected after-tax yearly income is below your target."
   );
 
   setText(outputIds.readinessTitle, readinessTitle);
   let resultExplainer =
     incomeGap >= 0
-      ? "At your planned retirement age, your projected yearly income is higher than the amount you want to spend."
-      : "At your planned retirement age, your projected yearly income is lower than the amount you want to spend.";
+      ? "At your planned retirement age, your projected after-tax yearly income is higher than the amount you want to spend."
+      : "At your planned retirement age, your projected after-tax yearly income is lower than the amount you want to spend.";
   setText(outputIds.futureSpendingTarget, formatCurrency(futureSpendingTarget));
   setText(outputIds.answerIncomeOutput, formatCurrency(estimatedIncome));
   setText(outputIds.answerDifferenceLabel, gapLabel);
@@ -1370,8 +1442,8 @@ function updatePlanner() {
   setText(
     outputIds.answerDifferenceNote,
     incomeGap >= 0
-      ? "This is the extra yearly income above your target."
-      : "This is the extra yearly income you would still need."
+      ? "This is the extra after-tax yearly income above your target."
+      : "This is the extra after-tax yearly income you would still need."
   );
   const nextDelayedIncome = getNextDelayedIncomeStart(inputs);
   const laterIncomeCallout = document.getElementById(outputIds.laterIncomeCallout);
@@ -1381,7 +1453,7 @@ function updatePlanner() {
     const laterGap = laterIncome.incomeGap;
 
     if (incomeGap < 0 && laterGap >= 0) {
-      resultExplainer = `At age ${retirementAge} there is still a gap, but the plan looks on track from age ${nextDelayedIncome.age} once ${sourceList} starts.`;
+      resultExplainer = `At age ${retirementAge} there is still an after-tax income gap, but the plan looks on track from age ${nextDelayedIncome.age} once ${sourceList} starts.`;
     }
 
     setHidden(outputIds.laterIncomeCallout, false);
@@ -1394,9 +1466,9 @@ function updatePlanner() {
     );
     setText(
       outputIds.laterIncomeCopy,
-      `Income at age ${retirementAge}: ${formatCurrency(estimatedIncome)} a year against a target of ${formatCurrency(
+      `After-tax income at age ${retirementAge}: ${formatCurrency(estimatedIncome)} a year against a target of ${formatCurrency(
         futureSpendingTarget
-      )}. Income from age ${nextDelayedIncome.age}: about ${formatCurrency(
+      )}. After-tax income from age ${nextDelayedIncome.age}: about ${formatCurrency(
         laterIncome.estimatedIncome
       )} a year against a target of ${formatCurrency(laterIncome.futureSpendingTarget)}.`
     );
@@ -1456,8 +1528,8 @@ function updatePlanner() {
   setText(
     outputIds.resultsGapSummary,
     incomeGap >= 0
-      ? `Your projected income is about ${formatCurrency(Math.abs(incomeGap))} above your target.`
-      : `Your projected income is about ${formatCurrency(Math.abs(incomeGap))} below your target.`
+      ? `Your projected after-tax income is about ${formatCurrency(Math.abs(incomeGap))} above your target.`
+      : `Your projected after-tax income is about ${formatCurrency(Math.abs(incomeGap))} below your target.`
   );
 
   setWidth(outputIds.publicPensionLumpSumShare, publicPensionLumpSumShare);
@@ -1476,6 +1548,8 @@ function updatePlanner() {
   setText(outputIds.statePensionIncomeOutput, formatCurrency(statePensionIncomeAtRetirement));
   setText(outputIds.publicPensionIncomeOutput, formatCurrency(publicPensionIncomeAtRetirement));
   setText(outputIds.otherGuaranteedIncomeOutput, formatCurrency(otherGuaranteedIncomeAtRetirement));
+  setText(outputIds.grossIncomeOutput, formatCurrency(grossEstimatedIncome));
+  setText(outputIds.incomeTaxOutput, formatCurrency(retirementIncomeTax));
   setText(outputIds.totalIncomeOutput, formatCurrency(estimatedIncome));
 
   if (includeAssetMix) {
@@ -1499,12 +1573,12 @@ function updatePlanner() {
     const taxProfile = getUkTaxProfile(taxBand);
     setText(
       outputIds.assumptionTax,
-      `A simple ${taxProfile.label} UK tax estimate is applied to taxable savings interest and GIA returns. ISAs, LISAs, and Premium Bonds stay tax-free in the model.`
+      `A simple ${taxProfile.label} UK tax estimate is applied to taxable savings, GIA returns, and retirement income. Private pension withdrawals are assumed to be ${pensionTaxFreePercent}% tax-free, while state and DB/public pension income are treated as taxable.`
     );
   } else {
     setText(
       outputIds.assumptionTax,
-      "Tax is not being estimated on taxable accounts, so GIA and taxable savings may look optimistic."
+      "Tax is not being estimated on retirement income or taxable accounts, so GIA, taxable savings, and pension income may look optimistic."
     );
   }
   setText(
