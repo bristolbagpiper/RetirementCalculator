@@ -74,8 +74,6 @@ const outputIds = {
   laterIncomeCallout: "later-income-callout",
   laterIncomeTitle: "later-income-title",
   laterIncomeCopy: "later-income-copy",
-  incomeFormulaNote: "income-formula-note",
-  laterIncomeNote: "later-income-note",
   extraYearsTitle: "extra-years-title",
   extraYearsCopy: "extra-years-copy",
   withdrawalGuidance: "withdrawalGuidance",
@@ -1122,13 +1120,6 @@ function updatePlanner() {
       ? "This is the extra yearly income above your target."
       : "This is the extra yearly income you would still need."
   );
-  setText(
-    outputIds.incomeFormulaNote,
-    `At age ${retirementAge}, this is ${withdrawalRate}% of ${formatCurrency(
-      projection.accessibleAssets
-    )} plus ${formatCurrency(projection.guaranteedIncomeTotal)} of guaranteed income already started.`
-  );
-
   const nextDelayedIncome = getNextDelayedIncomeStart(inputs);
   const laterIncomeCallout = document.getElementById(outputIds.laterIncomeCallout);
   if (nextDelayedIncome) {
@@ -1156,19 +1147,9 @@ function updatePlanner() {
         laterIncome.estimatedIncome
       )} a year against a target of ${formatCurrency(laterIncome.futureSpendingTarget)}.`
     );
-    setText(
-      outputIds.laterIncomeNote,
-      `At age ${nextDelayedIncome.age}, once ${sourceList} starts, this could rise to about ${formatCurrency(
-        laterIncome.estimatedIncome
-      )} a year based on the same withdrawal rule.`
-    );
   } else {
     setHidden(outputIds.laterIncomeCallout, true);
     laterIncomeCallout?.classList.remove("is-positive");
-    setText(
-      outputIds.laterIncomeNote,
-      "There are no later state or public/DB pension start ages waiting to kick in after your retirement age."
-    );
   }
   setText(outputIds.resultExplainer, resultExplainer);
 
