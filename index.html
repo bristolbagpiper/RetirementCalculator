@@ -89,10 +89,18 @@
         </div>
       </section>
 
-      <section class="panel-card panel-card-half panel-card-aside">
+      <section class="panel-card panel-card-half panel-card-aside" id="assetMixSection">
         <div class="panel-heading">
-          <p class="panel-kicker">Asset Mix</p>
-          <h2>Derisking and rebalance glide path</h2>
+          <div class="panel-heading-top">
+            <div>
+              <p class="panel-kicker">Asset Mix</p>
+              <h2>Derisking and rebalance glide path</h2>
+            </div>
+            <label class="section-toggle">
+              <input id="includeAssetMix" type="checkbox" checked>
+              <span>Include this section</span>
+            </label>
+          </div>
           <p class="section-copy">
             This lets the planner gradually move invested assets away from an equity-heavy mix as
             retirement gets closer. It applies to your private pension, S&amp;S ISA, and any GIA
@@ -314,7 +322,7 @@
           <div class="answer-item">
             <span>You could generate each year</span>
             <strong id="answer-income-output">&pound;0</strong>
-            <p>From your pension income, investments, and chosen home equity.</p>
+            <p>From guaranteed income, non-pension assets, and chosen home equity.</p>
           </div>
           <div class="answer-item answer-item-strong">
             <span id="answer-difference-label">Expected shortfall</span>
@@ -360,7 +368,7 @@
         <section class="results-card">
           <h3>Income estimate</h3>
           <div class="results-row">
-            <span>Drawdown from assets</span>
+            <span>Drawdown from ISA, other accounts and home equity</span>
             <strong id="drawdown-income">&pound;0</strong>
           </div>
           <div class="results-row">

@@ -20,6 +20,7 @@ const chartTooltip = document.getElementById("chartTooltip");
 const chartStage = document.getElementById("chartStage");
 const chartLegend = document.getElementById("chartLegend");
 const optionalSections = [
+  { toggleId: "includeAssetMix", containerId: "assetMixSection" },
   { toggleId: "includePension", containerId: "pensionSection" },
   { toggleId: "includeIsa", containerId: "isaSection" },
   { toggleId: "includeOtherAccounts", containerId: "otherAccountsSection" },
@@ -332,6 +333,10 @@ function getEquityAllocationPreRetirement(yearsRemaining, inputs) {
 }
 
 function getPreRetirementBlendedRate(growthReturn, monthIndex, totalYearsToRetirement, inputs) {
+  if (!inputs.includeAssetMix) {
+    return growthReturn;
+  }
+
   const yearsElapsed = monthIndex / 12;
   const yearsRemaining = Math.max(0, totalYearsToRetirement - yearsElapsed);
   const equityAllocation = getEquityAllocationPreRetirement(yearsRemaining, inputs);
@@ -339,6 +344,10 @@ function getPreRetirementBlendedRate(growthReturn, monthIndex, totalYearsToRetir
 }
 
 function getDrawdownBlendedRate(growthReturn, inputs) {
+  if (!inputs.includeAssetMix) {
+    return growthReturn;
+  }
+
   return blendedReturn(growthReturn, inputs.defensiveReturn, inputs.equityAllocationDrawdown);
 }
 
@@ -479,7 +488,7 @@ function calculateProjection(inputs, yearsToRetirement) {
   const projectedNetWorth = pensionFuture + isaFuture + savingsFuture + homeEquityFuture;
   const futureSpendingTarget =
     inputs.targetSpending * Math.pow(1 + inputs.inflationRate / 100, Math.max(0, yearsToRetirement));
-  const accessibleAssets = pensionFuture + isaFuture + savingsFuture + usableHomeEquity;
+  const accessibleAssets = isaFuture + savingsFuture + usableHomeEquity;
   const drawdownIncome = accessibleAssets * (inputs.withdrawalRate / 100);
   const estimatedIncome = drawdownIncome + inputs.guaranteedIncome;
   const incomeGap = estimatedIncome - futureSpendingTarget;
@@ -602,13 +611,11 @@ function buildContributionChartData(inputs, currentAge, yearsToRetirement) {
 function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement) {
   const maxYears = 25;
   const withdrawalBase =
-    (retirementProjection.pensionFuture +
-      retirementProjection.isaFuture +
+    (retirementProjection.isaFuture +
       retirementProjection.savingsFuture +
       retirementProjection.usableHomeEquity) *
     (inputs.withdrawalRate / 100);
 
-  let pensionBalance = retirementProjection.pensionFuture;
   let isaBalance = retirementProjection.isaFuture;
   let savingsBalance = retirementProjection.savingsFuture;
   let homeCashBalance = retirementProjection.usableHomeEquity;
@@ -616,12 +623,12 @@ function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement)
 
   for (let year = 0; year <= maxYears; year += 1) {
     const age = inputs.retirementAge + year;
-    const openingBalance = pensionBalance + isaBalance + savingsBalance + homeCashBalance;
+    const openingBalance = isaBalance + savingsBalance + homeCashBalance;
     const withdrawal = withdrawalBase * Math.pow(1 + inputs.inflationRate / 100, year);
 
     series.push({
       label: `Age ${age}`,
-      values: [{ key: "Projected remaining pot", value: openingBalance, color: "#2768c9" }],
+      values: [{ key: "Projected remaining drawdown pot", value: openingBalance, color: "#2768c9" }],
       total: openingBalance,
       withdrawal,
     });
@@ -633,28 +640,26 @@ function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement)
     const plannedWithdrawal = Math.min(openingBalance, withdrawal);
     const totalBeforeWithdrawal = Math.max(openingBalance, 1);
 
-    pensionBalance -= plannedWithdrawal * (pensionBalance / totalBeforeWithdrawal);
     isaBalance -= plannedWithdrawal * (isaBalance / totalBeforeWithdrawal);
     savingsBalance -= plannedWithdrawal * (savingsBalance / totalBeforeWithdrawal);
     homeCashBalance -= plannedWithdrawal * (homeCashBalance / totalBeforeWithdrawal);
 
-    pensionBalance = Math.max(0, pensionBalance * (1 + retirementProjection.pensionDrawdownRate / 100));
     isaBalance = Math.max(0, isaBalance * (1 + retirementProjection.isaDrawdownRate / 100));
     savingsBalance = Math.max(0, savingsBalance * (1 + retirementProjection.savingsDrawdownRate / 100));
     homeCashBalance = Math.max(0, homeCashBalance);
   }
 
   return {
-    title: "Drawdown projection after retirement",
-    summary: "This estimates how your accessible retirement pot changes over the first 25 years after retirement if withdrawals rise with inflation.",
-    description: "Hover the bars to compare the remaining pot and the planned withdrawal each year.",
-    legend: [{ label: "Projected remaining pot", color: "#2768c9" }],
+    title: "Non-pension drawdown projection after retirement",
+    summary: "This estimates how your ISA, other accounts, and chosen home equity change over the first 25 years after retirement if withdrawals rise with inflation.",
+    description: "Hover the bars to compare the remaining non-pension pot and the planned withdrawal each year.",
+    legend: [{ label: "Projected remaining drawdown pot", color: "#2768c9" }],
     data: series,
     tooltip(point) {
       return {
         title: point.label,
         lines: [
-          `Remaining pot: ${formatCurrency(point.total)}`,
+          `Remaining drawdown pot: ${formatCurrency(point.total)}`,
           `Planned withdrawal that year: ${formatCurrency(point.withdrawal)}`,
         ],
       };
@@ -685,12 +690,31 @@ function renderChartLegend(legend) {
 
 function showChartTooltip(event, payload) {
   const stageRect = chartStage.getBoundingClientRect();
-  const x = event.clientX - stageRect.left + 12;
-  const y = event.clientY - stageRect.top + 12;
   chartTooltip.hidden = false;
   chartTooltip.innerHTML = `<strong>${payload.title}</strong>${payload.lines
     .map((line) => `<span>${line}</span>`)
     .join("")}`;
+
+  const tooltipWidth = chartTooltip.offsetWidth;
+  const tooltipHeight = chartTooltip.offsetHeight;
+  const stageWidth = chartStage.clientWidth;
+  const stageHeight = chartStage.clientHeight;
+  const gap = 12;
+
+  let x = event.clientX - stageRect.left + gap;
+  let y = event.clientY - stageRect.top + gap;
+
+  if (x + tooltipWidth > stageWidth - gap) {
+    x = stageWidth - tooltipWidth - gap;
+  }
+
+  if (y + tooltipHeight > stageHeight - gap) {
+    y = event.clientY - stageRect.top - tooltipHeight - gap;
+  }
+
+  x = Math.max(gap, x);
+  y = Math.max(gap, y);
+
   chartTooltip.style.left = `${x}px`;
   chartTooltip.style.top = `${y}px`;
 }
@@ -793,6 +817,7 @@ function updatePlanner() {
   const targetSpending = readNumber("targetSpending");
   const inflationRate = readNumber("inflationRate");
   const withdrawalRate = readNumber("withdrawalRate");
+  const includeAssetMix = isChecked("includeAssetMix");
   const equityAllocationNow = readNumber("equityAllocationNow");
   const equityAllocationRetirement = readNumber("equityAllocationRetirement");
   const equityAllocationDrawdown = readNumber("equityAllocationDrawdown");
@@ -831,6 +856,7 @@ function updatePlanner() {
     targetSpending,
     inflationRate,
     withdrawalRate,
+    includeAssetMix,
     equityAllocationNow,
     equityAllocationRetirement,
     equityAllocationDrawdown,
@@ -976,12 +1002,19 @@ function updatePlanner() {
   setText(outputIds.otherGuaranteedIncomeOutput, formatCurrency(otherGuaranteedIncome));
   setText(outputIds.totalIncomeOutput, formatCurrency(estimatedIncome));
 
-  setText(
-    outputIds.assumptionGrowth,
-    `Invested assets use a glide path from ${clampPercentage(equityAllocationNow)}% equity today to ${clampPercentage(
-      equityAllocationRetirement
-    )}% at retirement, then ${clampPercentage(equityAllocationDrawdown)}% in drawdown, with ${defensiveReturn}% for lower-risk assets.`
-  );
+  if (includeAssetMix) {
+    setText(
+      outputIds.assumptionGrowth,
+      `Invested assets use a glide path from ${clampPercentage(equityAllocationNow)}% equity today to ${clampPercentage(
+        equityAllocationRetirement
+      )}% at retirement, then ${clampPercentage(equityAllocationDrawdown)}% in drawdown, with ${defensiveReturn}% for lower-risk assets.`
+    );
+  } else {
+    setText(
+      outputIds.assumptionGrowth,
+      "Invested assets use the return you enter for each section directly, with no automatic derisking or rebalance glide path."
+    );
+  }
   setText(
     outputIds.assumptionInflation,
     `Your ${formatCurrency(targetSpending)} target is inflated by ${inflationRate}% for ${yearsToRetirement} years.`
