@@ -95,6 +95,15 @@ h3 {
   max-width: none;
 }
 
+.hero-subtitle {
+  grid-column: 1 / span 8;
+  font-family: "Aptos Display", "Aptos", "Segoe UI", sans-serif;
+  font-size: clamp(1.35rem, 2vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
 .hero-text {
   grid-column: 9 / -1;
   margin-top: 0;
@@ -858,6 +867,7 @@ input[type="range"] {
 
   .hero .eyebrow,
   .hero h1,
+  .hero-subtitle,
   .hero-text {
     grid-column: auto;
   }
