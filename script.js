@@ -362,7 +362,7 @@ function getDrawdownBlendedRate(growthReturn, inputs) {
     return growthReturn;
   }
 
-  return blendedReturn(growthReturn, inputs.defensiveReturn, inputs.equityAllocationDrawdown);
+  return blendedReturn(growthReturn, inputs.defensiveReturn, inputs.equityAllocationRetirement);
 }
 
 function isGlidePathSavingsType(type) {
@@ -884,7 +884,6 @@ function updatePlanner() {
   const includeAssetMix = isChecked("includeAssetMix");
   const equityAllocationNow = readNumber("equityAllocationNow");
   const equityAllocationRetirement = readNumber("equityAllocationRetirement");
-  const equityAllocationDrawdown = readNumber("equityAllocationDrawdown");
   const deriskingStartYears = readNumber("deriskingStartYears");
   const defensiveReturn = readNumber("defensiveReturn");
   const includeStatePension = isChecked("includeStatePension");
@@ -928,7 +927,6 @@ function updatePlanner() {
     includeAssetMix,
     equityAllocationNow,
     equityAllocationRetirement,
-    equityAllocationDrawdown,
     deriskingStartYears,
     defensiveReturn,
     includeStatePension,
@@ -1093,7 +1091,7 @@ function updatePlanner() {
       outputIds.assumptionGrowth,
       `Invested assets use a glide path from ${clampPercentage(equityAllocationNow)}% equity today to ${clampPercentage(
         equityAllocationRetirement
-      )}% at retirement, then ${clampPercentage(equityAllocationDrawdown)}% in drawdown, with ${defensiveReturn}% for lower-risk assets.`
+      )}% at retirement, with ${defensiveReturn}% for lower-risk assets.`
     );
   } else {
     setText(
