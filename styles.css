@@ -568,6 +568,32 @@ h3 {
   margin-top: 0.85rem;
 }
 
+.timeline-explainer {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 0.85rem;
+}
+
+.timeline-step {
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.timeline-step strong {
+  display: block;
+  font-size: 0.92rem;
+}
+
+.timeline-step p {
+  margin-top: 0.3rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
 .inline-note {
   margin-top: 0.85rem;
   padding: 0.85rem 0.95rem;
@@ -716,8 +742,10 @@ h3 {
 }
 
 .guaranteed-income-card.optional-field.is-disabled {
-  background: #f3f6fa;
-  border-color: #dbe4ee;
+  opacity: 1;
+  background: #edf1f5;
+  border-color: #cdd7e2;
+  box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.28);
 }
 
 .optional-field.is-disabled .field-top > span,
@@ -726,11 +754,22 @@ h3 {
   color: #7c8da0;
 }
 
+.guaranteed-income-card.optional-field.is-disabled .field-top > span {
+  color: #66788d;
+}
+
 .optional-field.is-disabled input,
 .optional-field.is-disabled select {
   background: #eef3f7;
   border-color: #d5dee8;
   color: #7c8da0;
+}
+
+.guaranteed-income-card.optional-field.is-disabled input,
+.guaranteed-income-card.optional-field.is-disabled select {
+  background: #f5f8fb;
+  border-color: #d7e0ea;
+  color: #8a9aab;
 }
 
 .range-wrap {
@@ -1060,6 +1099,10 @@ input[type="range"] {
 
   .compact-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .timeline-explainer {
+    grid-template-columns: 1fr;
   }
 
   .guaranteed-income-grid {
