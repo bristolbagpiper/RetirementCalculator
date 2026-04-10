@@ -66,57 +66,74 @@
               </div>
             </div>
           </label>
-          <div class="field optional-field" id="statePensionField">
-            <div class="field-top">
-              <span>State pension</span>
-              <label class="mini-toggle">
-                <input id="includeStatePension" type="checkbox" checked>
-                <span>Include</span>
-              </label>
+          <div class="guaranteed-income-block full-width">
+            <div class="guaranteed-income-heading">
+              <p class="panel-kicker">Income Sources</p>
+              <h3>Guaranteed income that is not an investment pot</h3>
+              <p class="section-copy">
+                Use these for state pension, public or defined-benefit pensions, and any other fixed
+                income you expect in retirement.
+              </p>
             </div>
-            <div class="subfield-grid two-up">
-              <label class="field">
-                <span>Income per year</span>
-                <input id="statePensionIncome" type="number" min="0" step="1000" value="12000">
-              </label>
-              <label class="field">
-                <span>Starts at age</span>
-                <input id="statePensionStartAge" type="number" min="55" max="90" step="1" value="67">
-              </label>
+            <div class="guaranteed-income-grid">
+              <div class="guaranteed-income-card optional-field" id="statePensionField">
+                <div class="field-top">
+                  <span>State pension</span>
+                  <label class="mini-toggle">
+                    <input id="includeStatePension" type="checkbox" checked>
+                    <span>Include</span>
+                  </label>
+                </div>
+                <div class="subfield-grid two-up">
+                  <label class="field">
+                    <span>Income per year</span>
+                    <input id="statePensionIncome" type="number" min="0" step="1000" value="12000">
+                  </label>
+                  <label class="field">
+                    <span>Starts at age</span>
+                    <input id="statePensionStartAge" type="number" min="55" max="90" step="1" value="67">
+                  </label>
+                </div>
+              </div>
+
+              <div class="guaranteed-income-card optional-field" id="publicPensionField">
+                <div class="field-top">
+                  <span>Public or DB pension</span>
+                  <label class="mini-toggle">
+                    <input id="includePublicPension" type="checkbox">
+                    <span>Include</span>
+                  </label>
+                </div>
+                <div class="subfield-grid three-up">
+                  <label class="field">
+                    <span>Income per year</span>
+                    <input id="publicPensionIncome" type="number" min="0" step="1000" value="0">
+                  </label>
+                  <label class="field">
+                    <span>Starts at age</span>
+                    <input id="publicPensionStartAge" type="number" min="40" max="90" step="1" value="60">
+                  </label>
+                  <label class="field">
+                    <span>Lump sum at start</span>
+                    <input id="publicPensionLumpSum" type="number" min="0" step="1000" value="0">
+                  </label>
+                </div>
+              </div>
+
+              <div class="guaranteed-income-card guaranteed-income-card-wide optional-field" id="otherGuaranteedIncomeField">
+                <div class="field-top">
+                  <span>Other guaranteed income</span>
+                  <label class="mini-toggle">
+                    <input id="includeOtherGuaranteedIncome" type="checkbox">
+                    <span>Include</span>
+                  </label>
+                </div>
+                <label class="field">
+                  <span>Income per year</span>
+                  <input id="otherGuaranteedIncome" type="number" min="0" step="1000" value="0">
+                </label>
+              </div>
             </div>
-          </div>
-          <div class="field optional-field" id="publicPensionField">
-            <div class="field-top">
-              <span>Public or DB pension</span>
-              <label class="mini-toggle">
-                <input id="includePublicPension" type="checkbox">
-                <span>Include</span>
-              </label>
-            </div>
-            <div class="subfield-grid three-up">
-              <label class="field">
-                <span>Income per year</span>
-                <input id="publicPensionIncome" type="number" min="0" step="1000" value="0">
-              </label>
-              <label class="field">
-                <span>Starts at age</span>
-                <input id="publicPensionStartAge" type="number" min="40" max="90" step="1" value="60">
-              </label>
-              <label class="field">
-                <span>Lump sum at start</span>
-                <input id="publicPensionLumpSum" type="number" min="0" step="1000" value="0">
-              </label>
-            </div>
-          </div>
-          <div class="field optional-field" id="otherGuaranteedIncomeField">
-            <div class="field-top">
-              <span>Other guaranteed income per year</span>
-              <label class="mini-toggle">
-                <input id="includeOtherGuaranteedIncome" type="checkbox">
-                <span>Include</span>
-              </label>
-            </div>
-            <input id="otherGuaranteedIncome" type="number" min="0" step="1000" value="0">
           </div>
         </div>
       </section>
