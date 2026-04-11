@@ -1294,21 +1294,23 @@ function showChartTooltip(event, payload) {
   const tooltipHeight = chartTooltip.offsetHeight;
   const stageWidth = chartStage.clientWidth;
   const stageHeight = chartStage.clientHeight;
+  const scrollLeft = chartStage.scrollLeft;
+  const scrollTop = chartStage.scrollTop;
   const gap = 12;
 
-  let x = event.clientX - stageRect.left + gap;
-  let y = event.clientY - stageRect.top + gap;
+  let x = event.clientX - stageRect.left + scrollLeft + gap;
+  let y = event.clientY - stageRect.top + scrollTop + gap;
 
-  if (x + tooltipWidth > stageWidth - gap) {
-    x = stageWidth - tooltipWidth - gap;
+  if (x + tooltipWidth > scrollLeft + stageWidth - gap) {
+    x = scrollLeft + stageWidth - tooltipWidth - gap;
   }
 
-  if (y + tooltipHeight > stageHeight - gap) {
-    y = event.clientY - stageRect.top - tooltipHeight - gap;
+  if (y + tooltipHeight > scrollTop + stageHeight - gap) {
+    y = event.clientY - stageRect.top + scrollTop - tooltipHeight - gap;
   }
 
-  x = Math.max(gap, x);
-  y = Math.max(gap, y);
+  x = Math.max(scrollLeft + gap, x);
+  y = Math.max(scrollTop + gap, y);
 
   chartTooltip.style.left = `${x}px`;
   chartTooltip.style.top = `${y}px`;
@@ -1401,7 +1403,22 @@ function renderInteractiveChart(model) {
         .forEach((candidate) => candidate.classList.remove("is-hovered"));
       hideChartTooltip();
     });
+
+    bar.addEventListener("click", (event) => {
+      event.stopPropagation();
+      bars
+        .filter((candidate) => candidate.getAttribute("data-point-index") === String(pointIndex))
+        .forEach((candidate) => candidate.classList.add("is-hovered"));
+      showChartTooltip(event, model.tooltip(point));
+    });
   });
+
+  chartStage.onclick = (event) => {
+    if (!(event.target instanceof Element) || !event.target.closest(".chart-bar")) {
+      bars.forEach((bar) => bar.classList.remove("is-hovered"));
+      hideChartTooltip();
+    }
+  };
 }
 
 function updatePlanner() {

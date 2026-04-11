@@ -1277,6 +1277,35 @@ input[type="range"] {
     grid-template-columns: 1fr;
   }
 
+  .chart-mode-switch {
+    width: 100%;
+  }
+
+  .chart-mode {
+    flex: 1 1 calc(50% - 0.55rem);
+    text-align: center;
+  }
+
+  .chart-frame {
+    padding: 0.85rem;
+  }
+
+  .chart-stage {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.35rem;
+  }
+
+  .chart-stage svg {
+    min-width: 760px;
+  }
+
+  .chart-tooltip {
+    min-width: 180px;
+    max-width: 220px;
+  }
+
   .savings-header {
     display: none;
   }
