@@ -362,27 +362,6 @@
     <aside class="results" id="resultsSection">
       <section class="results-intro">
         <h2>Your retirement result</h2>
-        <p>This section is your answer area. Review the summary first, then use the breakdowns and charts underneath if you want more detail.</p>
-      </section>
-
-      <section class="overview" aria-label="Retirement overview">
-        <div class="overview-item">
-          <span>Years to retirement</span>
-          <strong id="years-to-retirement">0</strong>
-        </div>
-        <div class="overview-item">
-          <span>Projected net worth</span>
-          <strong id="projected-net-worth">&pound;0</strong>
-        </div>
-        <div class="overview-item">
-          <span>Estimated after-tax annual income</span>
-          <strong id="estimated-income">&pound;0</strong>
-        </div>
-        <div class="overview-item overview-item-wide">
-          <span id="income-gap-label">Expected shortfall</span>
-          <strong id="income-gap">&pound;0</strong>
-          <p class="summary-note" id="income-gap-note">Compared with your inflation-adjusted spending target.</p>
-        </div>
       </section>
 
       <section class="answer" aria-labelledby="readiness-title">
@@ -424,146 +403,173 @@
         </div>
       </section>
 
-      <div class="results-detail-grid">
-        <section class="results-card">
-          <h3>Projected balances at retirement</h3>
-          <div class="results-row">
-            <span>Public/DB pension lump sum</span>
-            <strong id="public-pension-lump-sum-output">&pound;0</strong>
-          </div>
-          <div class="results-row">
-            <span>Pension pot</span>
-            <strong id="pension-future-value">&pound;0</strong>
-          </div>
-          <div class="results-row">
-            <span>S&amp;S ISA</span>
-            <strong id="isa-future-value">&pound;0</strong>
-          </div>
-          <div class="results-row">
-            <span>Other accounts</span>
-            <strong id="savings-future-value">&pound;0</strong>
-          </div>
-          <div class="results-row">
-            <span>Home equity</span>
-            <strong id="home-equity-value">&pound;0</strong>
-          </div>
-          <div class="results-row">
-            <span>Usable home equity</span>
-            <strong id="usable-equity-value">&pound;0</strong>
-          </div>
-        </section>
+      <details class="results-disclosure">
+        <summary class="results-disclosure-summary">
+          <span>Show detailed breakdown, net worth and charts</span>
+        </summary>
+        <div class="results-disclosure-body">
+          <section class="overview" aria-label="Retirement overview">
+            <div class="overview-item">
+              <span>Years to retirement</span>
+              <strong id="years-to-retirement">0</strong>
+            </div>
+            <div class="overview-item">
+              <span>Projected net worth</span>
+              <strong id="projected-net-worth">&pound;0</strong>
+            </div>
+            <div class="overview-item">
+              <span>Estimated after-tax annual income</span>
+              <strong id="estimated-income">&pound;0</strong>
+            </div>
+            <div class="overview-item overview-item-wide">
+              <span id="income-gap-label">Expected shortfall</span>
+              <strong id="income-gap">&pound;0</strong>
+              <p class="summary-note" id="income-gap-note">Compared with your inflation-adjusted spending target.</p>
+            </div>
+          </section>
 
-        <section class="results-card">
-          <h3>Income estimate</h3>
-          <div class="results-row">
-            <span>Gross drawdown from pension, ISA, other accounts and home equity</span>
-            <strong id="drawdown-income">&pound;0</strong>
-          </div>
-          <div class="results-row">
-            <span>State pension income at retirement</span>
-            <strong id="state-pension-income-output">&pound;0</strong>
-          </div>
-          <div class="results-row">
-            <span>Public/DB pension income at retirement</span>
-            <strong id="public-pension-income-output">&pound;0</strong>
-          </div>
-          <div class="results-row">
-            <span>Other guaranteed income</span>
-            <strong id="other-guaranteed-income-output">&pound;0</strong>
-          </div>
-          <div class="results-row">
-            <span>Gross yearly income before tax</span>
-            <strong id="gross-income-output">&pound;0</strong>
-          </div>
-          <div class="results-row">
-            <span>Estimated income tax</span>
-            <strong id="income-tax-output">&pound;0</strong>
-          </div>
-          <div class="results-row emphasis">
-            <span>After-tax yearly income available</span>
-            <strong id="total-income-output">&pound;0</strong>
-          </div>
-        </section>
+          <div class="results-detail-grid">
+            <section class="results-card">
+              <h3>Projected balances at retirement</h3>
+              <div class="results-row">
+                <span>Public/DB pension lump sum</span>
+                <strong id="public-pension-lump-sum-output">&pound;0</strong>
+              </div>
+              <div class="results-row">
+                <span>Pension pot</span>
+                <strong id="pension-future-value">&pound;0</strong>
+              </div>
+              <div class="results-row">
+                <span>S&amp;S ISA</span>
+                <strong id="isa-future-value">&pound;0</strong>
+              </div>
+              <div class="results-row">
+                <span>Other accounts</span>
+                <strong id="savings-future-value">&pound;0</strong>
+              </div>
+              <div class="results-row">
+                <span>Home equity</span>
+                <strong id="home-equity-value">&pound;0</strong>
+              </div>
+              <div class="results-row">
+                <span>Usable home equity</span>
+                <strong id="usable-equity-value">&pound;0</strong>
+              </div>
+            </section>
 
-        <section class="results-card">
-          <h3>Net worth mix</h3>
-          <div class="mix-group">
-            <div class="mix-label">
-              <span>Public/DB lump sum</span>
-              <strong id="public-pension-lump-sum-share-label">0%</strong>
-            </div>
-            <div class="stack-bar"><span class="bar-fill public-pension-fill" id="public-pension-lump-sum-share"></span></div>
-          </div>
-          <div class="mix-group">
-            <div class="mix-label">
-              <span>Pension</span>
-              <strong id="pension-share-label">0%</strong>
-            </div>
-            <div class="stack-bar"><span class="bar-fill pension-fill" id="pension-share"></span></div>
-          </div>
-          <div class="mix-group">
-            <div class="mix-label">
-              <span>S&amp;S ISA</span>
-              <strong id="isa-share-label">0%</strong>
-            </div>
-            <div class="stack-bar"><span class="bar-fill isa-fill" id="isa-share"></span></div>
-          </div>
-          <div class="mix-group">
-            <div class="mix-label">
-              <span>Other accounts</span>
-              <strong id="savings-share-label">0%</strong>
-            </div>
-            <div class="stack-bar"><span class="bar-fill savings-fill" id="savings-share"></span></div>
-          </div>
-          <div class="mix-group">
-            <div class="mix-label">
-              <span>Home equity</span>
-              <strong id="home-share-label">0%</strong>
-            </div>
-            <div class="stack-bar"><span class="bar-fill home-fill" id="home-share"></span></div>
-          </div>
-        </section>
-      </div>
+            <section class="results-card">
+              <h3>Income estimate</h3>
+              <div class="results-row">
+                <span>Gross drawdown from pension, ISA, other accounts and home equity</span>
+                <strong id="drawdown-income">&pound;0</strong>
+              </div>
+              <div class="results-row">
+                <span>State pension income at retirement</span>
+                <strong id="state-pension-income-output">&pound;0</strong>
+              </div>
+              <div class="results-row">
+                <span>Public/DB pension income at retirement</span>
+                <strong id="public-pension-income-output">&pound;0</strong>
+              </div>
+              <div class="results-row">
+                <span>Other guaranteed income</span>
+                <strong id="other-guaranteed-income-output">&pound;0</strong>
+              </div>
+              <div class="results-row">
+                <span>Gross yearly income before tax</span>
+                <strong id="gross-income-output">&pound;0</strong>
+              </div>
+              <div class="results-row">
+                <span>Estimated income tax</span>
+                <strong id="income-tax-output">&pound;0</strong>
+              </div>
+              <div class="results-row emphasis">
+                <span>After-tax yearly income available</span>
+                <strong id="total-income-output">&pound;0</strong>
+              </div>
+            </section>
 
-      <section class="results-card charts-card">
-        <div class="charts-header">
-          <div>
-            <h3>Interactive charts</h3>
-            <p class="chart-note" id="chartDescription">
-              Hover the bars to inspect how your plan grows between now and retirement.
-            </p>
+            <section class="results-card">
+              <h3>Net worth mix</h3>
+              <div class="mix-group">
+                <div class="mix-label">
+                  <span>Public/DB lump sum</span>
+                  <strong id="public-pension-lump-sum-share-label">0%</strong>
+                </div>
+                <div class="stack-bar"><span class="bar-fill public-pension-fill" id="public-pension-lump-sum-share"></span></div>
+              </div>
+              <div class="mix-group">
+                <div class="mix-label">
+                  <span>Pension</span>
+                  <strong id="pension-share-label">0%</strong>
+                </div>
+                <div class="stack-bar"><span class="bar-fill pension-fill" id="pension-share"></span></div>
+              </div>
+              <div class="mix-group">
+                <div class="mix-label">
+                  <span>S&amp;S ISA</span>
+                  <strong id="isa-share-label">0%</strong>
+                </div>
+                <div class="stack-bar"><span class="bar-fill isa-fill" id="isa-share"></span></div>
+              </div>
+              <div class="mix-group">
+                <div class="mix-label">
+                  <span>Other accounts</span>
+                  <strong id="savings-share-label">0%</strong>
+                </div>
+                <div class="stack-bar"><span class="bar-fill savings-fill" id="savings-share"></span></div>
+              </div>
+              <div class="mix-group">
+                <div class="mix-label">
+                  <span>Home equity</span>
+                  <strong id="home-share-label">0%</strong>
+                </div>
+                <div class="stack-bar"><span class="bar-fill home-fill" id="home-share"></span></div>
+              </div>
+            </section>
           </div>
-          <div class="chart-mode-switch" aria-label="Chart modes">
-            <button class="chart-mode is-active" type="button" data-chart-mode="growth">Net worth growth</button>
-            <button class="chart-mode" type="button" data-chart-mode="contributions">Contributions</button>
-            <button class="chart-mode" type="button" data-chart-mode="drawdown">Drawdown</button>
-          </div>
+
+          <section class="results-card charts-card">
+            <div class="charts-header">
+              <div>
+                <h3>Interactive charts</h3>
+                <p class="chart-note" id="chartDescription">
+                  Hover the bars to inspect how your plan grows between now and retirement.
+                </p>
+              </div>
+              <div class="chart-mode-switch" aria-label="Chart modes">
+                <button class="chart-mode is-active" type="button" data-chart-mode="growth">Net worth growth</button>
+                <button class="chart-mode" type="button" data-chart-mode="contributions">Contributions</button>
+                <button class="chart-mode" type="button" data-chart-mode="drawdown">Drawdown</button>
+              </div>
+            </div>
+
+            <div class="chart-frame">
+              <div class="chart-meta">
+                <h4 id="chartTitle">Net worth growth to retirement</h4>
+                <p id="chartSummary">Projected total net worth grows as contributions, returns, and home equity build over time.</p>
+              </div>
+              <div class="chart-stage" id="chartStage">
+                <div class="chart-canvas">
+                  <svg id="interactiveChart" viewBox="0 0 960 380" role="img" aria-labelledby="chartTitle"></svg>
+                </div>
+                <div class="chart-tooltip" id="chartTooltip" hidden></div>
+              </div>
+              <div class="chart-legend" id="chartLegend"></div>
+            </div>
+          </section>
+
+          <section class="results-card assumptions">
+            <h3>Assumptions</h3>
+            <ul>
+              <li id="assumption-growth">Monthly compounding is used for pension and ISA growth.</li>
+              <li id="assumption-inflation">Target spending is inflated from today to retirement.</li>
+              <li id="assumption-tax">Tax is not being estimated on taxable accounts.</li>
+              <li id="assumption-equity">Only the chosen share of home equity is counted toward funding.</li>
+            </ul>
+          </section>
         </div>
-
-        <div class="chart-frame">
-          <div class="chart-meta">
-            <h4 id="chartTitle">Net worth growth to retirement</h4>
-            <p id="chartSummary">Projected total net worth grows as contributions, returns, and home equity build over time.</p>
-          </div>
-          <div class="chart-stage" id="chartStage">
-            <div class="chart-canvas">
-              <svg id="interactiveChart" viewBox="0 0 960 380" role="img" aria-labelledby="chartTitle"></svg>
-            </div>
-            <div class="chart-tooltip" id="chartTooltip" hidden></div>
-          </div>
-          <div class="chart-legend" id="chartLegend"></div>
-        </div>
-      </section>
-
-      <section class="results-card assumptions">
-        <h3>Assumptions</h3>
-        <ul>
-          <li id="assumption-growth">Monthly compounding is used for pension and ISA growth.</li>
-          <li id="assumption-inflation">Target spending is inflated from today to retirement.</li>
-          <li id="assumption-tax">Tax is not being estimated on taxable accounts.</li>
-          <li id="assumption-equity">Only the chosen share of home equity is counted toward funding.</li>
-        </ul>
-      </section>
+      </details>
     </aside>
   </main>
 

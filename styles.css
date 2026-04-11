@@ -338,13 +338,6 @@ h3 {
   font-size: clamp(1.7rem, 3vw, 2.45rem);
 }
 
-.results-intro p:last-child {
-  margin-top: 0.45rem;
-  max-width: 60ch;
-  color: var(--muted);
-  line-height: 1.55;
-}
-
 .field-grid {
   display: grid;
   gap: 0.7rem 0.8rem;
@@ -929,6 +922,45 @@ input[type="range"] {
 .results-row.emphasis strong {
   color: var(--accent-strong);
   font-size: 1.15rem;
+}
+
+.results-disclosure {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  overflow: hidden;
+}
+
+.results-disclosure-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.95rem 1.05rem;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.results-disclosure-summary::-webkit-details-marker {
+  display: none;
+}
+
+.results-disclosure-summary::after {
+  content: "Show";
+  color: var(--accent-strong);
+  font-size: 0.9rem;
+}
+
+.results-disclosure[open] .results-disclosure-summary::after {
+  content: "Hide";
+}
+
+.results-disclosure-body {
+  display: grid;
+  gap: 1rem;
+  padding: 0 0 1rem;
 }
 
 .mix-group + .mix-group {
