@@ -146,17 +146,18 @@
                 <span>Suggested retirement tax band</span>
                 <input id="taxBand" type="hidden" value="basic">
                 <div class="static-value" id="taxBandDisplay">Basic rate</div>
-                <small id="taxBandHelp">Auto-suggested from projected taxable retirement income at your retirement age.</small>
               </label>
               <label class="field">
                 <span>Private pension withdrawals taken tax-free (%)</span>
                 <input id="pensionTaxFreePercent" type="number" min="0" max="25" step="1" value="25">
               </label>
+              <p class="tax-helper full-width" id="taxBandHelp">Auto-suggested from projected taxable retirement income at your retirement age.</p>
             </div>
-            <p class="section-copy tax-copy">
-              State pension and DB/public pension income are treated as taxable. ISA withdrawals, Premium Bonds,
-              and home equity stay tax-free in the model.
-            </p>
+              <p class="section-copy tax-copy">
+                State pension and DB/public pension income are treated as taxable. Private pension withdrawals are
+                treated as taxable apart from the tax-free percentage above. ISA withdrawals, Premium Bonds, and
+                home equity stay tax-free in the model.
+              </p>
           </div>
         </div>
       </section>
@@ -406,8 +407,8 @@
       <details class="results-disclosure">
         <summary class="results-disclosure-summary">
           <div class="results-disclosure-copy">
-            <strong>See the full breakdown</strong>
-            <small>Open charts, net worth, tax details and the full calculation.</small>
+            <strong>Open your full breakdown</strong>
+            <small>See the charts, net worth, tax detail and full calculation underneath.</small>
           </div>
         </summary>
         <div class="results-disclosure-body">
