@@ -282,6 +282,7 @@ h3 {
 .results {
   display: grid;
   gap: 0.95rem;
+  min-width: 0;
 }
 
 .planner {
@@ -300,6 +301,7 @@ h3 {
 .panel-card,
 .results-card {
   padding: 1rem 1.05rem;
+  min-width: 0;
 }
 
 .panel-heading {
@@ -1021,6 +1023,7 @@ input[type="range"] {
   border: 1px solid var(--border);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.82);
+  min-width: 0;
 }
 
 .chart-meta h4 {
@@ -1043,6 +1046,11 @@ input[type="range"] {
   margin-top: 1rem;
   padding: 0.5rem 0 0;
   overflow: visible;
+  min-width: 0;
+}
+
+.chart-canvas {
+  width: 100%;
 }
 
 .chart-stage svg {
@@ -1292,13 +1300,14 @@ input[type="range"] {
 
   .chart-stage {
     overflow-x: auto;
-    overflow-y: visible;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 0.35rem;
+    max-width: 100%;
   }
 
-  .chart-stage svg {
-    min-width: 760px;
+  .chart-canvas {
+    width: 760px;
   }
 
   .chart-tooltip {
