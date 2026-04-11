@@ -148,15 +148,15 @@
                 <div class="static-value" id="taxBandDisplay">Basic rate</div>
               </label>
               <label class="field">
-                <span>Private pension withdrawals taken tax-free (%)</span>
+                <span>Private pension taken tax-free at retirement (%)</span>
                 <input id="pensionTaxFreePercent" type="number" min="0" max="25" step="1" value="25">
               </label>
               <p class="tax-helper full-width" id="taxBandHelp">Auto-suggested from projected taxable retirement income at your retirement age.</p>
             </div>
               <p class="section-copy tax-copy">
                 State pension and DB/public pension income are treated as taxable. Private pension withdrawals are
-                treated as taxable apart from the tax-free percentage above. ISA withdrawals, Premium Bonds, and
-                home equity stay tax-free in the model.
+                treated as taxable after the tax-free pension cash taken at retirement. ISA withdrawals, Premium
+                Bonds, and home equity stay tax-free in the model.
               </p>
           </div>
         </div>
@@ -440,7 +440,11 @@
                 <strong id="public-pension-lump-sum-output">&pound;0</strong>
               </div>
               <div class="results-row">
-                <span>Pension pot</span>
+                <span>Private pension tax-free cash at retirement</span>
+                <strong id="pension-tax-free-cash-output">&pound;0</strong>
+              </div>
+              <div class="results-row">
+                <span>Remaining private pension pot</span>
                 <strong id="pension-future-value">&pound;0</strong>
               </div>
               <div class="results-row">
@@ -464,7 +468,7 @@
             <section class="results-card">
               <h3>Income estimate</h3>
               <div class="results-row">
-                <span>Gross drawdown from pension, ISA, other accounts and home equity</span>
+                <span>Gross drawdown from pension, pension tax-free cash, ISA, other accounts and home equity</span>
                 <strong id="drawdown-income">&pound;0</strong>
               </div>
               <div class="results-row">

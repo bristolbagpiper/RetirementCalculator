@@ -123,6 +123,7 @@ const outputIds = {
   extraYearsTitle: "extra-years-title",
   extraYearsCopy: "extra-years-copy",
   withdrawalGuidance: "withdrawalGuidance",
+  pensionTaxFreeCashOutput: "pension-tax-free-cash-output",
   pensionFutureValue: "pension-future-value",
   isaFutureValue: "isa-future-value",
   savingsFutureValue: "savings-future-value",
@@ -890,34 +891,47 @@ function getNextDelayedIncomeStart(inputs) {
 function simulateBalancesToAge(inputs, retirementProjection, targetAge) {
   const yearsAfterRetirement = Math.max(0, targetAge - inputs.retirementAge);
   const withdrawalBase =
-    (retirementProjection.pensionFuture +
+    (retirementProjection.pensionDrawdownPot +
+      retirementProjection.pensionTaxFreeCash +
       retirementProjection.publicPensionLumpSum +
       retirementProjection.isaFuture +
       retirementProjection.savingsFuture +
       retirementProjection.usableHomeEquity) *
     (inputs.withdrawalRate / 100);
 
-  let pensionBalance = retirementProjection.pensionFuture;
+  let pensionDrawdownBalance = retirementProjection.pensionDrawdownPot;
+  let pensionTaxFreeCashBalance = retirementProjection.pensionTaxFreeCash;
   let publicPensionLumpSumBalance = retirementProjection.publicPensionLumpSum;
   let isaBalance = retirementProjection.isaFuture;
   let savingsBalance = retirementProjection.savingsFuture;
   let homeCashBalance = retirementProjection.usableHomeEquity;
 
   for (let year = 0; year < yearsAfterRetirement; year += 1) {
-    const openingBalance = pensionBalance + publicPensionLumpSumBalance + isaBalance + savingsBalance + homeCashBalance;
+    const openingBalance =
+      pensionDrawdownBalance +
+      pensionTaxFreeCashBalance +
+      publicPensionLumpSumBalance +
+      isaBalance +
+      savingsBalance +
+      homeCashBalance;
     if (openingBalance > 0) {
       const withdrawal = withdrawalBase * Math.pow(1 + inputs.inflationRate / 100, year);
       const plannedWithdrawal = Math.min(openingBalance, withdrawal);
       const totalBeforeWithdrawal = Math.max(openingBalance, 1);
 
-      pensionBalance -= plannedWithdrawal * (pensionBalance / totalBeforeWithdrawal);
+      pensionDrawdownBalance -= plannedWithdrawal * (pensionDrawdownBalance / totalBeforeWithdrawal);
+      pensionTaxFreeCashBalance -= plannedWithdrawal * (pensionTaxFreeCashBalance / totalBeforeWithdrawal);
       publicPensionLumpSumBalance -= plannedWithdrawal * (publicPensionLumpSumBalance / totalBeforeWithdrawal);
       isaBalance -= plannedWithdrawal * (isaBalance / totalBeforeWithdrawal);
       savingsBalance -= plannedWithdrawal * (savingsBalance / totalBeforeWithdrawal);
       homeCashBalance -= plannedWithdrawal * (homeCashBalance / totalBeforeWithdrawal);
     }
 
-    pensionBalance = Math.max(0, pensionBalance * (1 + retirementProjection.pensionDrawdownRate / 100));
+    pensionDrawdownBalance = Math.max(0, pensionDrawdownBalance * (1 + retirementProjection.pensionDrawdownRate / 100));
+    pensionTaxFreeCashBalance = Math.max(
+      0,
+      pensionTaxFreeCashBalance * (1 + retirementProjection.pensionDrawdownRate / 100)
+    );
     isaBalance = Math.max(0, isaBalance * (1 + retirementProjection.isaDrawdownRate / 100));
     savingsBalance = Math.max(0, savingsBalance * (1 + retirementProjection.savingsDrawdownRate / 100));
     publicPensionLumpSumBalance = Math.max(0, publicPensionLumpSumBalance);
@@ -934,34 +948,41 @@ function simulateBalancesToAge(inputs, retirementProjection, targetAge) {
   }
 
   return {
-    pensionBalance,
+    pensionDrawdownBalance,
+    pensionTaxFreeCashBalance,
     publicPensionLumpSumBalance,
     isaBalance,
     savingsBalance,
     homeCashBalance,
     accessibleAssets:
-      pensionBalance + publicPensionLumpSumBalance + isaBalance + savingsBalance + homeCashBalance,
+      pensionDrawdownBalance +
+      pensionTaxFreeCashBalance +
+      publicPensionLumpSumBalance +
+      isaBalance +
+      savingsBalance +
+      homeCashBalance,
   };
 }
 
 function calculateIncomeAtAge(inputs, retirementProjection, targetAge) {
   const balances = simulateBalancesToAge(inputs, retirementProjection, targetAge);
   const guaranteedBenefits = getGuaranteedBenefits(inputs, Math.max(0, targetAge - inputs.currentAge));
-  const pensionDrawdownIncome = balances.pensionBalance * (inputs.withdrawalRate / 100);
+  const pensionDrawdownIncome = balances.pensionDrawdownBalance * (inputs.withdrawalRate / 100);
+  const pensionTaxFreeCashIncome = balances.pensionTaxFreeCashBalance * (inputs.withdrawalRate / 100);
   const publicPensionLumpSumDrawdownIncome = balances.publicPensionLumpSumBalance * (inputs.withdrawalRate / 100);
   const isaDrawdownIncome = balances.isaBalance * (inputs.withdrawalRate / 100);
   const savingsDrawdownIncome = balances.savingsBalance * (inputs.withdrawalRate / 100);
   const homeEquityDrawdownIncome = balances.homeCashBalance * (inputs.withdrawalRate / 100);
   const drawdownIncome =
     pensionDrawdownIncome +
+    pensionTaxFreeCashIncome +
     publicPensionLumpSumDrawdownIncome +
     isaDrawdownIncome +
     savingsDrawdownIncome +
     homeEquityDrawdownIncome;
   const grossEstimatedIncome = drawdownIncome + guaranteedBenefits.guaranteedIncomeTotal;
-  const taxablePensionDrawdownIncome = pensionDrawdownIncome * (1 - inputs.pensionTaxFreePercent / 100);
   const taxableRetirementIncome =
-    taxablePensionDrawdownIncome +
+    pensionDrawdownIncome +
     guaranteedBenefits.statePensionIncome +
     guaranteedBenefits.publicPensionIncome +
     guaranteedBenefits.otherGuaranteedIncome;
@@ -1032,6 +1053,8 @@ function calculateProjection(inputs, yearsToRetirement) {
         inputs.pensionContributionInflation
       )
   );
+  const pensionTaxFreeCash = pensionFuture * (inputs.pensionTaxFreePercent / 100);
+  const pensionDrawdownPot = Math.max(0, pensionFuture - pensionTaxFreeCash);
 
   const isaFuture = futureValueWithMonthlyContributionsSchedule(
     inputs.isaCurrent,
@@ -1067,22 +1090,23 @@ function calculateProjection(inputs, yearsToRetirement) {
   const futureSpendingTarget =
     inputs.targetSpending * Math.pow(1 + inputs.inflationRate / 100, Math.max(0, yearsToRetirement));
   const accessibleAssets =
-    pensionFuture + guaranteedBenefits.publicPensionLumpSum + isaFuture + savingsFuture + usableHomeEquity;
-  const pensionDrawdownIncome = pensionFuture * (inputs.withdrawalRate / 100);
+    pensionDrawdownPot + pensionTaxFreeCash + guaranteedBenefits.publicPensionLumpSum + isaFuture + savingsFuture + usableHomeEquity;
+  const pensionDrawdownIncome = pensionDrawdownPot * (inputs.withdrawalRate / 100);
+  const pensionTaxFreeCashIncome = pensionTaxFreeCash * (inputs.withdrawalRate / 100);
   const publicPensionLumpSumDrawdownIncome = guaranteedBenefits.publicPensionLumpSum * (inputs.withdrawalRate / 100);
   const isaDrawdownIncome = isaFuture * (inputs.withdrawalRate / 100);
   const savingsDrawdownIncome = savingsFuture * (inputs.withdrawalRate / 100);
   const homeEquityDrawdownIncome = usableHomeEquity * (inputs.withdrawalRate / 100);
   const drawdownIncome =
     pensionDrawdownIncome +
+    pensionTaxFreeCashIncome +
     publicPensionLumpSumDrawdownIncome +
     isaDrawdownIncome +
     savingsDrawdownIncome +
     homeEquityDrawdownIncome;
   const grossEstimatedIncome = drawdownIncome + guaranteedBenefits.guaranteedIncomeTotal;
-  const taxablePensionDrawdownIncome = pensionDrawdownIncome * (1 - inputs.pensionTaxFreePercent / 100);
   const taxableRetirementIncome =
-    taxablePensionDrawdownIncome +
+    pensionDrawdownIncome +
     guaranteedBenefits.statePensionIncome +
     guaranteedBenefits.publicPensionIncome +
     guaranteedBenefits.otherGuaranteedIncome;
@@ -1096,6 +1120,8 @@ function calculateProjection(inputs, yearsToRetirement) {
     publicPensionIncome: guaranteedBenefits.publicPensionIncome,
     otherGuaranteedIncome: guaranteedBenefits.otherGuaranteedIncome,
     pensionFuture,
+    pensionTaxFreeCash,
+    pensionDrawdownPot,
     isaFuture,
     savingsFuture,
     homeEquityFuture,
@@ -1228,14 +1254,16 @@ function buildContributionChartData(inputs, currentAge, yearsToRetirement) {
 function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement) {
   const maxYears = 25;
   const withdrawalBase =
-    (retirementProjection.pensionFuture +
+    (retirementProjection.pensionDrawdownPot +
+      retirementProjection.pensionTaxFreeCash +
       retirementProjection.publicPensionLumpSum +
       retirementProjection.isaFuture +
       retirementProjection.savingsFuture +
       retirementProjection.usableHomeEquity) *
     (inputs.withdrawalRate / 100);
 
-  let pensionBalance = retirementProjection.pensionFuture;
+  let pensionDrawdownBalance = retirementProjection.pensionDrawdownPot;
+  let pensionTaxFreeCashBalance = retirementProjection.pensionTaxFreeCash;
   let publicPensionLumpSumBalance = retirementProjection.publicPensionLumpSum;
   let isaBalance = retirementProjection.isaFuture;
   let savingsBalance = retirementProjection.savingsFuture;
@@ -1244,7 +1272,13 @@ function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement)
 
   for (let year = 0; year <= maxYears; year += 1) {
     const age = inputs.retirementAge + year;
-    const openingBalance = pensionBalance + publicPensionLumpSumBalance + isaBalance + savingsBalance + homeCashBalance;
+    const openingBalance =
+      pensionDrawdownBalance +
+      pensionTaxFreeCashBalance +
+      publicPensionLumpSumBalance +
+      isaBalance +
+      savingsBalance +
+      homeCashBalance;
     const withdrawal = withdrawalBase * Math.pow(1 + inputs.inflationRate / 100, year);
 
     series.push({
@@ -1261,13 +1295,18 @@ function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement)
     const plannedWithdrawal = Math.min(openingBalance, withdrawal);
     const totalBeforeWithdrawal = Math.max(openingBalance, 1);
 
-    pensionBalance -= plannedWithdrawal * (pensionBalance / totalBeforeWithdrawal);
+    pensionDrawdownBalance -= plannedWithdrawal * (pensionDrawdownBalance / totalBeforeWithdrawal);
+    pensionTaxFreeCashBalance -= plannedWithdrawal * (pensionTaxFreeCashBalance / totalBeforeWithdrawal);
     publicPensionLumpSumBalance -= plannedWithdrawal * (publicPensionLumpSumBalance / totalBeforeWithdrawal);
     isaBalance -= plannedWithdrawal * (isaBalance / totalBeforeWithdrawal);
     savingsBalance -= plannedWithdrawal * (savingsBalance / totalBeforeWithdrawal);
     homeCashBalance -= plannedWithdrawal * (homeCashBalance / totalBeforeWithdrawal);
 
-    pensionBalance = Math.max(0, pensionBalance * (1 + retirementProjection.pensionDrawdownRate / 100));
+    pensionDrawdownBalance = Math.max(0, pensionDrawdownBalance * (1 + retirementProjection.pensionDrawdownRate / 100));
+    pensionTaxFreeCashBalance = Math.max(
+      0,
+      pensionTaxFreeCashBalance * (1 + retirementProjection.pensionDrawdownRate / 100)
+    );
     publicPensionLumpSumBalance = Math.max(0, publicPensionLumpSumBalance);
     isaBalance = Math.max(0, isaBalance * (1 + retirementProjection.isaDrawdownRate / 100));
     savingsBalance = Math.max(0, savingsBalance * (1 + retirementProjection.savingsDrawdownRate / 100));
@@ -1276,7 +1315,8 @@ function buildDrawdownChartData(inputs, retirementProjection, yearsToRetirement)
 
   return {
     title: "Drawdown projection after retirement",
-    summary: "This estimates how your pension pot, ISA, other accounts, and chosen home equity change over the first 25 years after retirement if withdrawals rise with inflation.",
+    summary:
+      "This estimates how your pension drawdown pot, any tax-free pension cash taken at retirement, ISA, other accounts, and chosen home equity change over the first 25 years after retirement if withdrawals rise with inflation.",
     description: "Hover the bars to compare the remaining drawdown pot and the planned withdrawal each year.",
     legend: [{ label: "Projected remaining drawdown pot", color: "#2768c9" }],
     data: series,
@@ -1566,6 +1606,8 @@ function updatePlanner() {
     publicPensionIncome: publicPensionIncomeAtRetirement,
     otherGuaranteedIncome: otherGuaranteedIncomeAtRetirement,
     pensionFuture,
+    pensionTaxFreeCash,
+    pensionDrawdownPot,
     isaFuture,
     savingsFuture,
     homeEquityFuture,
@@ -1679,7 +1721,8 @@ function updatePlanner() {
   }
 
   setText(outputIds.publicPensionLumpSumOutput, formatCurrency(publicPensionLumpSum));
-  setText(outputIds.pensionFutureValue, formatCurrency(pensionFuture));
+  setText(outputIds.pensionTaxFreeCashOutput, formatCurrency(pensionTaxFreeCash));
+  setText(outputIds.pensionFutureValue, formatCurrency(pensionDrawdownPot));
   setText(outputIds.isaFutureValue, formatCurrency(isaFuture));
   setText(outputIds.savingsFutureValue, formatCurrency(savingsFuture));
   setText(outputIds.homeEquityValue, formatCurrency(homeEquityFuture));
@@ -1748,7 +1791,7 @@ function updatePlanner() {
     const taxProfile = getUkTaxProfile(taxBand);
     setText(
       outputIds.assumptionTax,
-      `A simple ${taxProfile.label} UK tax estimate is applied to taxable savings, GIA returns, and retirement income. Private pension withdrawals are assumed to be ${pensionTaxFreePercent}% tax-free, while state and DB/public pension income are treated as taxable.`
+      `A simple ${taxProfile.label} UK tax estimate is applied to taxable savings, GIA returns, and retirement income. The planner assumes ${pensionTaxFreePercent}% of the private pension is taken tax-free at retirement, with later drawdown from the remaining private pension treated as taxable. State and DB/public pension income are also treated as taxable.`
     );
   } else {
     setText(
