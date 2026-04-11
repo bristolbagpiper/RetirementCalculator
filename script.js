@@ -100,6 +100,8 @@ const UK_PERSONAL_ALLOWANCE = 12570;
 const UK_ALLOWANCE_TAPER_START = 100000;
 const UK_BASIC_RATE_BAND = 37700;
 const UK_HIGHER_RATE_BAND = 74870;
+const UK_BASIC_RATE_LIMIT = 50270;
+const UK_ADDITIONAL_RATE_LIMIT = 125140;
 
 const outputIds = {
   yearsToRetirement: "years-to-retirement",
@@ -160,6 +162,8 @@ const outputIds = {
   assumptionGrowth: "assumption-growth",
   assumptionInflation: "assumption-inflation",
   assumptionTax: "assumption-tax",
+  taxBandDisplay: "taxBandDisplay",
+  taxBandHelp: "taxBandHelp",
   assumptionEquity: "assumption-equity",
   equityUsageLabel: "equity-usage-label",
   chartTitle: "chartTitle",
@@ -548,6 +552,30 @@ function getGiaDividendRate(rate) {
 
 function getUkTaxProfile(taxBand) {
   return UK_TAX_PROFILES[taxBand] || UK_TAX_PROFILES.basic;
+}
+
+function getTaxBandDisplayLabel(taxBand) {
+  const labels = {
+    basic: "Basic rate",
+    higher: "Higher rate",
+    additional: "Additional rate",
+  };
+
+  return labels[taxBand] || "Basic rate";
+}
+
+function suggestRetirementTaxBand(taxableRetirementIncome) {
+  const income = Math.max(0, taxableRetirementIncome);
+
+  if (income > UK_ADDITIONAL_RATE_LIMIT) {
+    return "additional";
+  }
+
+  if (income > UK_BASIC_RATE_LIMIT) {
+    return "higher";
+  }
+
+  return "basic";
 }
 
 function getEstimatedNetSavingsRate(type, rate, taxProfile, includeTaxEstimate) {
@@ -949,6 +977,7 @@ function calculateIncomeAtAge(inputs, retirementProjection, targetAge) {
     estimatedIncome,
     accessibleAssets: balances.accessibleAssets,
     guaranteedIncomeTotal: guaranteedBenefits.guaranteedIncomeTotal,
+    taxableRetirementIncome,
     futureSpendingTarget,
     incomeGap: estimatedIncome - futureSpendingTarget,
   };
@@ -1079,6 +1108,7 @@ function calculateProjection(inputs, yearsToRetirement) {
     retirementIncomeTax,
     estimatedIncome,
     incomeGap,
+    taxableRetirementIncome,
     guaranteedIncomeTotal: guaranteedBenefits.guaranteedIncomeTotal,
     pensionDrawdownRate: getDrawdownBlendedRate(inputs.pensionReturn, inputs),
     isaDrawdownRate: getDrawdownBlendedRate(inputs.isaReturn, inputs),
@@ -1442,7 +1472,7 @@ function updatePlanner() {
   const includeOtherAccounts = isChecked("includeOtherAccounts");
   const includeHome = isChecked("includeHome");
   const includeTaxEstimate = isChecked("includeTaxEstimate");
-  const taxBand = document.getElementById("taxBand")?.value || "basic";
+  const storedTaxBand = document.getElementById("taxBand")?.value || "basic";
 
   const statePensionIncome = includeStatePension ? readNumber("statePensionIncome") : 0;
   const statePensionStartAge = includeStatePension ? readNumber("statePensionStartAge") : 67;
@@ -1471,7 +1501,7 @@ function updatePlanner() {
   const equityUsageRate = includeHome ? readNumber("equityUsageRate") : 0;
 
   const yearsToRetirement = Math.max(0, retirementAge - currentAge);
-  const inputs = {
+  const buildInputs = (resolvedTaxBand) => ({
     currentAge,
     retirementAge,
     targetSpending,
@@ -1501,15 +1531,34 @@ function updatePlanner() {
     isaContributionInflation,
     includeOtherAccounts,
     includeTaxEstimate,
-    taxBand,
+    taxBand: resolvedTaxBand,
     homeValue,
     homeGrowth,
     mortgageBalance,
     mortgageRate,
     mortgageTermYears,
     equityUsageRate,
-  };
+  });
 
+  const preliminaryInputs = buildInputs(storedTaxBand);
+  const preliminaryProjection = calculateProjection(preliminaryInputs, yearsToRetirement);
+  const taxBand = includeTaxEstimate
+    ? suggestRetirementTaxBand(preliminaryProjection.taxableRetirementIncome)
+    : storedTaxBand;
+  const taxBandField = document.getElementById("taxBand");
+  if (taxBandField) {
+    taxBandField.value = taxBand;
+  }
+
+  setText(outputIds.taxBandDisplay, getTaxBandDisplayLabel(taxBand));
+  setText(
+    outputIds.taxBandHelp,
+    includeTaxEstimate
+      ? `Auto-suggested from about ${formatCurrency(preliminaryProjection.taxableRetirementIncome)} of taxable retirement income at age ${retirementAge}.`
+      : "Turn on the tax estimate to auto-suggest the retirement tax band."
+  );
+
+  const inputs = buildInputs(taxBand);
   const projection = calculateProjection(inputs, yearsToRetirement);
   const {
     publicPensionLumpSum,

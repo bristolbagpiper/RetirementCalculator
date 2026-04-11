@@ -143,12 +143,10 @@
                 <span>Estimate UK tax on retirement income and taxable accounts</span>
               </label>
               <label class="field tax-band-field">
-                <span>Tax band</span>
-                <select id="taxBand">
-                  <option value="basic">Basic rate</option>
-                  <option value="higher">Higher rate</option>
-                  <option value="additional">Additional rate</option>
-                </select>
+                <span>Suggested retirement tax band</span>
+                <input id="taxBand" type="hidden" value="basic">
+                <div class="static-value" id="taxBandDisplay">Basic rate</div>
+                <small id="taxBandHelp">Auto-suggested from projected taxable retirement income at your retirement age.</small>
               </label>
               <label class="field">
                 <span>Private pension withdrawals taken tax-free (%)</span>
@@ -402,10 +400,12 @@
           </p>
         </div>
       </section>
+    </aside>
 
+    <section class="results-more">
       <details class="results-disclosure">
         <summary class="results-disclosure-summary">
-          <span>Show detailed breakdown, net worth and charts</span>
+          <span>Open full breakdown, net worth and charts</span>
         </summary>
         <div class="results-disclosure-body">
           <section class="overview" aria-label="Retirement overview">
@@ -570,7 +570,7 @@
           </section>
         </div>
       </details>
-    </aside>
+    </section>
   </main>
 
   <noscript>
